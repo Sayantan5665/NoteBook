@@ -115,34 +115,66 @@ A preload script running with `contextIsolation: true` exposes a minimal, explic
 
 ### 6.1 Workspace as the Unit of Isolation
 
-Every user data entity belongs to exactly one Workspace. Each Workspace is stored as:
+Every user data entity belongs to exactly one Workspace. Each Workspace is stored as a self-contained directory. The **Workspace Manager** (see §14) is the sole component responsible for opening, closing, creating, and switching Workspaces.
+
+The application uses **one SQLite database per Workspace**. This provides complete data isolation — each Workspace's data, search index, and embedding vectors are independent. See §12.1 below and [ADR-009-WorkspaceIsolation.md](./ADR-009-WorkspaceIsolation.md).
+
+### 6.2 Workspace Storage Layout
+
+Each Workspace directory follows this canonical layout:
 
 ```
 ~/Notebooks/<workspace-name>/
-    notebook.db          ← SQLite database (notes, metadata, embeddings, FTS, version history)
-    attachments/         ← Raw attachment files
-    exports/             ← Temporary export staging area
-    backups/             ← Local backup snapshots
-    .manifest.json       ← Workspace identity and sync metadata
+    manifest.json        ← Workspace identity, sync metadata, schema version
+    database.db          ← SQLite database (notes, folders, tags, todos, FTS5, sqlite-vec embeddings, version history)
+    attachments/         ← Raw attachment files (stored verbatim; never re-encoded)
+    cache/
+        ocr/             ← OCR text output cache (intermediate results)
+        thumbnails/      ← Generated image thumbnails
+    logs/                ← Workspace-level operation logs
+    backups/             ← Local backup snapshots (created by BackupWorkspaceUseCase)
 ```
+
+| Entry | Purpose |
+|---|---|
+| `manifest.json` | Workspace UUID, name, schema version, device sync metadata. Read first on open; synchronized to Google Drive. |
+| `database.db` | The single SQLite database containing all structured data for this Workspace. |
+| `attachments/` | Raw files attached to notes. Stored verbatim; referenced by metadata records in `database.db`. |
+| `cache/ocr/` | Intermediate OCR text output. Treated as reproducible; may be deleted and regenerated. |
+| `cache/thumbnails/` | Scaled image previews for the UI. Reproducible from original attachments. |
+| `logs/` | Workspace-scoped log entries from background jobs (OCR, embedding, sync). |
+| `backups/` | Local point-in-time backup archives. Never automatically deleted by the application. |
 
 Workspaces are fully self-contained. Deleting the directory deletes the Workspace.
 
-### 6.2 Primary vs. Secondary Storage
+### 6.3 Primary vs. Secondary Storage
 
 | Storage | Role | Authority |
 |---|---|---|
 | Local SQLite + filesystem | Primary data store | **Authoritative** |
 | Google Drive | Sync replica | Secondary — never authoritative |
 
-### 6.3 Search Architecture
+### 6.4 Workspace Database Strategy
 
-Two complementary search subsystems run locally:
+The application uses **one `database.db` per Workspace**. Workspaces are never stored in a shared global database.
 
-- **FTS5** — SQLite extension for keyword search. Maintains a virtual FTS table automatically updated on note/attachment write.
-- **sqlite-vec** — SQLite extension for vector similarity search. Stores embeddings alongside note data in the same database file.
+| Advantage | Detail |
+|---|---|
+| **Isolation** | A corrupted Workspace database cannot affect other Workspaces |
+| **Independent backup** | Each Workspace database is backed up and restored independently |
+| **Independent sync** | Sync can be enabled per Workspace without affecting others |
+| **Independent AI index** | Embedding vectors are scoped to their Workspace; re-indexing one Workspace does not affect others |
+| **Simpler export/import** | A Workspace export is the directory itself — no partial database extraction needed |
+| **Future encryption** | Each database can be encrypted independently with a per-Workspace passphrase |
 
-Both subsystems are queried locally with no network dependency.
+### 6.5 Search Subsystems
+
+Two complementary search subsystems run locally, both stored within `database.db`:
+
+- **FTS5** — SQLite extension for keyword search. Maintains a virtual FTS table updated on every note/attachment write.
+- **sqlite-vec** — SQLite extension for vector similarity search. Stores embedding vectors alongside note metadata.
+
+Both subsystems are queried locally with no network dependency. See §17 for the full Search Architecture.
 
 ---
 
@@ -246,3 +278,203 @@ Full ADRs are in [14-ArchitectureDecisions.md](./14-ArchitectureDecisions.md). S
 - A formal process boundary between core and plugins (e.g., worker threads or secondary Electron utility processes) for stronger plugin isolation.
 - Peer-to-peer sync as an alternative sync provider.
 - A secondary read model (in-memory cache) for performance-critical queries at very large Workspace scales.
+
+---
+
+## 14. Workspace Manager
+
+The **Workspace Manager** is a dedicated architectural component in the Application Layer responsible for the complete Workspace lifecycle. It is the single point of authority for which Workspace is currently active.
+
+### 14.1 Responsibilities
+
+| Responsibility | Description |
+|---|---|
+| **Create Workspace** | Initializes the directory structure, `manifest.json`, and `database.db`; runs initial migrations |
+| **Open Workspace** | Validates the manifest, connects the Prisma client to `database.db`, runs pending migrations, initializes subsystems |
+| **Close Workspace** | Gracefully disconnects the Prisma client, flushes background queues, and clears the active Workspace context |
+| **Switch Active Workspace** | Closes the current Workspace and opens the selected one; notifies all subsystems of the context change |
+| **Rename Workspace** | Updates `manifest.json` and the directory name; updates the internal registry |
+| **Delete Workspace** | Closes if active, removes the directory after user confirmation |
+| **Workspace Manifest** | Reads and writes `manifest.json`; maintains Workspace identity, schema version, and sync metadata |
+| **Active Workspace Context** | Exposes the currently active `WorkspaceId` and local path to all subsystems that require it |
+| **Workspace Metadata** | Provides the list of all registered Workspaces and their last-opened state |
+
+### 14.2 Active Workspace Context
+
+Every module that accesses notes, files, AI, search, sync, or settings **shall** operate against the currently active Workspace. The active Workspace context is not a global variable — it is a value provided by the Workspace Manager and injected into use cases and services as a dependency.
+
+```mermaid
+graph TD
+    WM["WorkspaceManager"]
+    CTX["ActiveWorkspaceContext\n{ workspaceId, dbPath, fsPath }"]
+    NoteUC["Note Use Cases"]
+    SearchSvc["Search Service"]
+    AiSvc["AI Chat Service"]
+    SyncSvc["Sync Service"]
+    SettingsSvc["Settings Service"]
+    EmbQueue["Embedding Queue"]
+
+    WM -->|"sets"| CTX
+    CTX -->|"injected into"| NoteUC
+    CTX -->|"injected into"| SearchSvc
+    CTX -->|"injected into"| AiSvc
+    CTX -->|"injected into"| SyncSvc
+    CTX -->|"injected into"| SettingsSvc
+    CTX -->|"injected into"| EmbQueue
+```
+
+When a Workspace is switched, the Workspace Manager updates the context and all dependent services re-scope to the new Workspace automatically.
+
+### 14.3 Workspace Lifecycle Sequence
+
+```mermaid
+sequenceDiagram
+    participant User as User
+    participant WM as WorkspaceManager
+    participant Manifest as manifest.json
+    participant DB as database.db
+    participant Subs as Subsystems
+
+    User->>WM: openWorkspace(path)
+    WM->>Manifest: read and validate
+    WM->>DB: connect PrismaClient
+    WM->>DB: run pending migrations
+    WM->>Subs: setActiveWorkspace(context)
+    Subs-->>WM: acknowledged
+    WM-->>User: WorkspaceOpenedEvent
+
+    User->>WM: closeWorkspace()
+    WM->>Subs: flushQueues()
+    WM->>DB: disconnect PrismaClient
+    WM->>WM: clearActiveWorkspaceContext()
+    WM-->>User: WorkspaceClosedEvent
+```
+
+---
+
+## 15. Application Startup Sequence
+
+The following sequence defines the initialization order for the Electron main process. The order is deliberate: each step depends on the completion of the step above it.
+
+```mermaid
+flowchart TD
+    A["Application Launch"] --> B["Load Application Configuration"]
+    B --> C["Initialize Logging"]
+    C --> D["Initialize Plugin Host"]
+    D --> E["Open Last Workspace\n(or show Workspace Selector)"]
+    E --> F["Validate Workspace\n(manifest + schema version check)"]
+    F --> G["Run Database Migrations"]
+    G --> H["Initialize Repository Layer\n(connect PrismaClient)"]
+    H --> I["Initialize Search\n(verify FTS5 + sqlite-vec)"]
+    I --> J["Initialize AI\n(check Ollama availability)"]
+    J --> K["Initialize Synchronization\n(check auth token)"]
+    K --> L["Initialize Background Job Manager"]
+    L --> M["Load Angular UI\n(BrowserWindow ready)"]
+    M --> N["Application Ready"]
+```
+
+### 15.1 Step Rationale
+
+| Step | Why This Order |
+|---|---|
+| **Load Configuration** | All subsequent steps depend on configuration (paths, preferences, last Workspace) |
+| **Initialize Logging** | Logging must be ready before any step that can fail |
+| **Initialize Plugin Host** | Plugins may register providers (AI, OCR, sync) that subsequent init steps need to discover |
+| **Open Last Workspace** | The Workspace path is needed before database and repository initialization |
+| **Validate Workspace** | Corrupt or incompatible manifests must be caught before migrations run |
+| **Run Migrations** | The database schema must be current before repositories attempt queries |
+| **Initialize Repository Layer** | Repositories must be ready before search and AI subsystems query them |
+| **Initialize Search** | FTS5 and sqlite-vec readiness is verified; any missing index triggers a background rebuild |
+| **Initialize AI** | Ollama availability is probed; result is surfaced in the UI but does not block startup |
+| **Initialize Synchronization** | OAuth token validity is checked; sync is not started automatically |
+| **Initialize Background Job Manager** | Resumes any interrupted jobs from the previous session |
+| **Load Angular UI** | The UI is shown only once all critical subsystems are ready; AI/sync degraded states are shown in-UI |
+
+---
+
+## 16. Background Job Manager
+
+The **Background Job Manager** is a lightweight in-process coordinator for long-running, non-blocking operations. It runs entirely within the Electron main process and requires no external queue infrastructure.
+
+### 16.1 Responsibilities
+
+| Responsibility | Description |
+|---|---|
+| **Queue** | Maintains an ordered queue of pending jobs per job type |
+| **Progress Reporting** | Pushes progress events to the renderer via IPC (`embedding:progress`, `ocr:progress`, etc.) |
+| **Retry** | Retries failed jobs up to a configurable limit with exponential backoff |
+| **Cancellation** | Supports per-job cancellation signals; jobs check the signal and abort gracefully |
+| **Concurrency Limits** | Enforces maximum concurrency per job type (e.g., max 1 OCR job and 1 embedding job in parallel) |
+| **Error Reporting** | Persists job failure details to the Workspace log directory; surfaces errors to the renderer |
+| **Session Resume** | On startup, resumes interrupted jobs from the previous session (job state is persisted to `database.db`) |
+
+### 16.2 Managed Job Types
+
+| Job Type | Trigger | Concurrency |
+|---|---|---|
+| **OCR** | `AttachmentAddedEvent` | 1 concurrent |
+| **Embedding Generation** | `NoteCreatedEvent`, `NoteUpdatedEvent`, `OcrCompletedEvent` | 1 concurrent |
+| **Synchronization** | User-initiated or scheduled | 1 concurrent |
+| **Backup** | User-initiated | 1 concurrent |
+| **Thumbnail Generation** | `AttachmentAddedEvent` | 2 concurrent |
+| **File Indexing** | `AttachmentAddedEvent` (for document parsing) | 1 concurrent |
+| **Import** | User-initiated | 1 concurrent |
+| **Export** | User-initiated | 1 concurrent |
+
+### 16.3 Job State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> Queued : Job submitted
+    Queued --> Running : Worker picks up job
+    Running --> Completed : Success
+    Running --> Failed : Error (retries exhausted)
+    Running --> Cancelled : Cancellation signal received
+    Failed --> Queued : Retry (within limit)
+    Completed --> [*]
+    Failed --> [*]
+    Cancelled --> [*]
+```
+
+---
+
+## 17. Search Architecture
+
+The search subsystem provides two complementary search modes that can be used independently or merged into a hybrid result set.
+
+### 17.1 Search Flow
+
+```mermaid
+flowchart TD
+    Q["User Query"]
+    SS["Search Service"]
+    FTS["SQLite FTS5\n(Keyword Search)"]
+    VEC["sqlite-vec\n(Semantic Search)"]
+    MERGE["Result Merger"]
+    RANK["Ranking / Scoring"]
+    RET["Return Results"]
+    DP["Document Parser Output\n(indexed text)"] -->|"feeds"| FTS
+    DP -->|"embeddings"| VEC
+
+    Q --> SS
+    SS --> FTS
+    SS --> VEC
+    FTS --> MERGE
+    VEC --> MERGE
+    MERGE --> RANK
+    RANK --> RET
+```
+
+### 17.2 Search Modes
+
+| Mode | Mechanism | Best For |
+|---|---|---|
+| **Keyword Search** | SQLite FTS5 — exact and prefix matching against note titles, body text, and OCR-extracted attachment text | Finding specific terms, names, or phrases |
+| **Semantic Search** | sqlite-vec — cosine similarity between query embedding and pre-computed content embeddings | Finding conceptually related content regardless of exact wording |
+| **Hybrid Search** | Both modes executed; results merged and re-ranked by a combined relevance score | Best overall relevance for general queries |
+
+### 17.3 Search Boundaries
+
+- The Search Service **shall** access data only through `ISearchRepository` and `IEmbeddingRepository` — never by querying SQLite directly.
+- AI features **shall** use the Retrieval Service (which wraps semantic search) to retrieve context — they do not call the Search Service directly.
+- Future re-ranking support (cross-encoder models) can be added as an optional post-processing step in the Ranking stage without changing the search query path.

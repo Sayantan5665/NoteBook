@@ -266,3 +266,32 @@ Editor extensions and themes affect the Angular renderer process. The integratio
 - Disabling a plugin removes its registered provider and restores the application to default behavior.
 - The SDK version compatibility check prevents a plugin with an incompatible `sdkVersion` from loading.
 - Installing a plugin and enabling it does not require an application restart.
+
+---
+
+## 13. Plugin Security Boundaries
+
+The following boundaries are non-negotiable and apply to all plugins regardless of extension point or declared permissions.
+
+### 13.1 Data Access Boundaries
+
+| Boundary | Rule |
+|---|---|
+| **No direct SQLite access** | Plugins **shall not** open, query, or modify `database.db` directly. All data access **shall** be performed through the APIs exposed by `PluginHostApi`. |
+| **No direct Workspace file modification** | Plugins **shall not** write to `manifest.json`, `database.db`, or any file in the `attachments/` directory directly. All Workspace file operations **shall** go through the published `PluginHostApi` file interfaces. |
+| **Published interfaces only** | Plugins communicate with the application exclusively through the declared `PluginHostApi`. Internal use cases, repositories, and domain services are not accessible to plugins. |
+| **Least privilege** | Plugins operate with only the permissions they have declared in `plugin.json` and the user has confirmed. No permission is granted implicitly. |
+
+### 13.2 Enforced by Design
+
+- Plugin code receives only the `PluginHostApi` object at `activate()` time. It has no reference to any internal service, use case, or Prisma client.
+- Filesystem permissions in `PluginHostApi` restrict write access to the plugin's own data subdirectory: `attachments/plugins/<plugin-id>/`. Writes outside this path are rejected.
+- Database mutations requested through `PluginHostApi` are executed by the application as first-class use case calls — subject to the same validation, transaction safety, and event publishing as any other operation.
+
+### 13.3 Future Permission Model
+
+The permission model is designed to be extended without breaking existing plugins:
+
+- New permission identifiers can be added to the `PluginPermission` enum in `packages/plugin-sdk/` as new capabilities are introduced.
+- Existing plugins that do not declare new permissions continue to work; they simply cannot access new capabilities.
+- A future plugin sandboxing migration (to `utilityProcess`) will transfer the same permission declarations to an OS-enforced boundary without requiring plugin updates.

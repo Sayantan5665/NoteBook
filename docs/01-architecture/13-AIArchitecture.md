@@ -49,7 +49,35 @@ graph TD
     SEM --> EMB
 ```
 
----
+### 2.1 AI Request Pipeline
+
+Every AI chat request follows a defined pipeline. Each stage has a single, bounded responsibility.
+
+```mermaid
+flowchart TD
+    Q["User Question"]
+    RS["Retrieval Service\n(SemanticSearchService)"]
+    CB["Context Builder"]
+    PB["Prompt Builder"]
+    AP["AI Provider\n(IAiProvider interface)"]
+    CIT["Citation Builder"]
+    RESP["Response"]
+
+    Q --> RS
+    RS -->|"relevant note excerpts"| CB
+    CB -->|"formatted context"| PB
+    PB -->|"complete prompt"| AP
+    AP -->|"streamed tokens"| CIT
+    CIT -->|"annotated response + citations"| RESP
+```
+
+| Stage | Responsibility | Boundary |
+|---|---|---|
+| **Retrieval Service** | Embeds the query; queries `IEmbeddingRepository` for similar vectors; returns ranked note excerpts | Accesses data only through `IEmbeddingRepository` — never queries SQLite directly |
+| **Context Builder** | Selects and formats retrieved excerpts to fit the model's context window; includes backlink-connected notes | Operates on data already retrieved — performs no I/O itself |
+| **Prompt Builder** | Assembles the final prompt: system instructions, context, conversation history, and user question | Pure string construction; no I/O |
+| **AI Provider** | Executes inference against the prepared prompt; streams token chunks | Receives only the prepared prompt string — never accesses the database or filesystem |
+| **Citation Builder** | Maps response content back to source note IDs from the Retrieval stage | Operates on metadata returned by the Retrieval stage — no additional I/O |
 
 ## 3. Provider Abstractions
 
@@ -247,7 +275,30 @@ This is separate from the AI chat flow — semantic search returns notes, not AI
 
 ---
 
-## 9. Future Considerations (AI-Specific)
+## 10. AI Boundaries
+
+The following boundaries are non-negotiable and apply to all AI subsystem implementations, including plugin-provided AI providers.
+
+### 10.1 Data Access Boundaries
+
+| Boundary | Rule |
+|---|---|
+| **No direct SQLite access** | AI Providers **shall not** query the SQLite database directly. All data retrieval is performed by the Retrieval Service through `IEmbeddingRepository` and `ISearchRepository`. |
+| **No direct filesystem access** | AI Providers **shall not** read attachment files, note content, or any Workspace file directly. All content is provided as prepared text by the Context Builder. |
+| **Prepared context only** | AI Providers receive a single, pre-assembled prompt string. They have no knowledge of the source notes, attachment paths, or database structure. |
+| **All retrieval through Application Services** | The Retrieval Service, Context Builder, and Citation Builder are Application Layer services. They mediate all data access on behalf of the AI subsystem. |
+
+### 10.2 Network Boundaries
+
+| Boundary | Rule |
+|---|---|
+| **Local by default** | The default `OllamaAiProvider` communicates only with the local Ollama process over loopback (`http://localhost:11434`). No external network call is made. |
+| **Remote only by explicit user configuration** | A plugin-provided AI provider **may** make outbound network calls, but only with the `network:outbound` permission explicitly declared and user-confirmed at plugin install time. |
+| **No implicit data transmission** | Under no circumstances **shall** note content, attachment text, or Workspace metadata be transmitted to an external service without explicit user knowledge and consent. |
+
+---
+
+## 11. Future Considerations (AI-Specific)
 
 These items are documented for awareness but **shall not** influence initial implementation decisions:
 

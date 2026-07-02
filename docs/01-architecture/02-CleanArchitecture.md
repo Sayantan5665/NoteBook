@@ -217,9 +217,10 @@ Application Services handle cross-cutting concerns that span multiple use cases 
 
 | Service | Responsibility |
 |---|---|
+| `WorkspaceManager` | Workspace lifecycle, active context management, manifest read/write |
 | `EmbeddingQueueService` | Manages the queue of pending embedding jobs |
 | `OcrQueueService` | Manages the queue of pending OCR jobs |
-| `WorkspaceSessionService` | Tracks the currently active Workspace |
+| `BackgroundJobManager` | Coordinates all long-running background jobs with queueing, retry, and progress reporting |
 | `PluginRegistryService` | Manages registered plugins and their capabilities |
 | `EventBusService` | Publishes and subscribes to domain events |
 | `ConfigurationService` | Reads and writes application configuration |
@@ -256,6 +257,48 @@ Key implementations:
 | `IOcrProvider` | `TesseractOcrProvider` |
 | `ISyncProvider` | `GoogleDriveSyncProvider` |
 | `IFileStorage` | `LocalFileStorage` |
+| `IDocumentParser` | `DocumentParserRouter` (delegates to format-specific parsers) |
+
+### 6.1 Document Parser Abstraction
+
+The **Document Parser** layer converts every supported file format into a common internal representation before content is indexed for search or AI retrieval. This ensures that search and AI subsystems are decoupled from individual file format implementations.
+
+```mermaid
+graph TD
+    ATT["Attachment File"]
+    ROUTER["DocumentParserRouter\n(implements IDocumentParser)"]
+    PDF["PdfParser"]
+    DOCX["DocxParser"]
+    XLS["ExcelParser"]
+    MD["MarkdownParser"]
+    TXT["PlainTextParser"]
+    IMG["ImageParser\n(via OCR Provider)"]
+    PLUGIN["Plugin Importer\n(future)"]
+    OUT["ParsedDocument\n{ text, metadata, sections }"] 
+
+    ATT --> ROUTER
+    ROUTER --> PDF
+    ROUTER --> DOCX
+    ROUTER --> XLS
+    ROUTER --> MD
+    ROUTER --> TXT
+    ROUTER --> IMG
+    ROUTER -.->|"plugin extension"| PLUGIN
+    PDF --> OUT
+    DOCX --> OUT
+    XLS --> OUT
+    MD --> OUT
+    TXT --> OUT
+    IMG --> OUT
+    PLUGIN --> OUT
+```
+
+The `ParsedDocument` output is the single contract consumed by:
+- The **FTS5 indexer** (indexes the extracted text for keyword search)
+- The **Embedding Queue** (embeds the extracted text for semantic search)
+- The **AI Retrieval Service** (uses the parsed text as context)
+
+Individual parser implementations live in `packages/infrastructure/parsers/`. New format support is added by implementing `IDocumentParser` and registering with the router — or by installing a plugin that declares `importer` extension point capabilities.
 
 See [../01-architecture/08-RepositoryPattern.md](./08-RepositoryPattern.md) for the full pattern specification.
 
@@ -301,3 +344,44 @@ To enforce layer boundaries mechanically:
 - All use cases can be executed in a pure Node.js test environment with in-memory repository mocks.
 - Swapping `OllamaAiProvider` for a mock AI provider requires no changes to any use case or domain entity.
 - ESLint import boundary rule violations block CI builds.
+
+---
+
+## 11. Attachment Ownership Model
+
+The architecture treats Attachments as **independent entities**, not as embedded children of a Note.
+
+### 11.1 Ownership Rules
+
+| Rule | Detail |
+|---|---|
+| **Attachments are independent** | An `Attachment` entity has its own identity (`AttachmentId`) and exists independently of any Note |
+| **Notes reference Attachments** | A Note contains a set of `AttachmentId` references; it does not contain the attachment data |
+| **Attachment files are not embedded** | The actual file is stored in `attachments/` on the filesystem; the database record contains only metadata (path, MIME type, size, OCR status) |
+| **Multiple Notes may reference the same Attachment** | A shared file (e.g., a company logo PDF) can be referenced by multiple Notes without duplication |
+| **Deleting a Note does not delete referenced Attachments** | Attachments are only deleted through an explicit `DeleteAttachmentUseCase` or through Trash permanent deletion |
+
+### 11.2 Reference Model
+
+```mermaid
+erDiagram
+    Note {
+        NoteId id
+        string title
+    }
+    Attachment {
+        AttachmentId id
+        string filename
+        string mimeType
+        string filePath
+        string ocrText
+    }
+    NoteAttachment {
+        NoteId noteId
+        AttachmentId attachmentId
+    }
+    Note ||--o{ NoteAttachment : "references"
+    Attachment ||--o{ NoteAttachment : "referenced by"
+```
+
+This model **shall** be reflected consistently across the Domain entities, repository interfaces, and database schema.

@@ -269,3 +269,32 @@ The `GoogleDriveSyncProvider` implements this interface. Alternative sync provid
 - A sync conflict is never resolved by silently discarding local data.
 - Manual sync completes within 30 seconds for a Workspace with 10,000 notes and 1 GB of attachments on a 50 Mbps connection.
 - Sync can be disabled for a Workspace without affecting any other Workspace.
+
+---
+
+## 14. Synchronization Boundaries
+
+The following boundaries are non-negotiable and apply to the synchronization subsystem and all sync provider implementations.
+
+### 14.1 Domain Object Boundaries
+
+| Boundary | Rule |
+|---|---|
+| **No direct Domain object modification** | The sync subsystem **shall not** modify Domain entities (Note, Folder, Attachment, Tag, Todo, etc.) directly. All Workspace content changes that arise from a sync operation (e.g., importing a remote version of a note) **shall** be applied by the appropriate Application Layer use case. |
+| **Application Services as the interface** | The `GoogleDriveSyncProvider` communicates with the rest of the application exclusively through Application Services and use cases. It does not call repositories directly. |
+| **Business rules always apply** | Every data change resulting from a sync **shall** pass through the same validation, domain rules, and event publishing as any user-initiated change. Sync **shall never** bypass business rules to achieve performance or simplicity. |
+
+### 14.2 Data Authority Boundary
+
+| Boundary | Rule |
+|---|---|
+| **Local is always authoritative** | `database.db` and the `attachments/` directory on the local machine are the authoritative data store. Google Drive is a secondary replica. |
+| **No silent overwrite** | The sync subsystem **shall not** overwrite local data without explicit user confirmation in any scenario where local changes could be lost. |
+| **Conflict resolution is user-directed** | When automatic conflict resolution is not possible, the user **shall** be presented with a choice. The default is always to preserve the local version. |
+
+### 14.3 Scope Boundary
+
+| Boundary | Rule |
+|---|---|
+| **Per-Workspace scope** | Each Workspace is synchronized independently. Enabling, disabling, or executing sync for one Workspace has no effect on any other Workspace. |
+| **Sync logic is local** | All conflict detection, manifest management, merge decisions, and upload/download scheduling run on the local machine. Google Drive executes no application logic. |
