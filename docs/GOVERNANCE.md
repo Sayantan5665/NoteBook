@@ -16,11 +16,21 @@ This document defines the documentation governance rules for the Notebook projec
 
 The following documentation hierarchy **shall** be considered authoritative. When conflicts occur, higher-priority documents take precedence over lower-priority ones.
 
-1. **ADR (Architecture Decision Records)** — The ultimate authority on specific design choices
-2. **Architecture Documents** — System overview and subsystem design
-3. **Database Documents** — Data models and schemas
-4. **Module Specifications** — Internal module design
-5. **Development Guides** — Implementation practices
+1. **Governance Documents**
+2. **Architecture Decision Records (ADR)**
+3. **Product Requirements (docs/00-overview)**
+4. **Architecture Documents**
+5. **Database Documents**
+6. **Module Specifications**
+7. **Development Guides**
+
+- Governance defines the documentation process.
+- ADRs are the authoritative record for approved architectural decisions.
+- Product Requirements define WHAT the application must do.
+- Architecture defines HOW the application is designed.
+- Database documentation defines how information is stored.
+- Module documentation defines feature behavior.
+- Development guides define implementation practices.
 
 ---
 
@@ -31,6 +41,16 @@ Once the Architecture documentation is approved, it is considered **frozen**.
 - Architecture documents **shall not** be rewritten.
 - Major architectural changes require a new Architecture Decision Record (ADR).
 - Existing architecture documents may only be updated (patched) to reflect an approved ADR.
+
+---
+
+## Product Requirements Freeze
+
+- Once the Product Requirements documentation (`docs/00-overview`) has been approved, it is considered frozen.
+- Approved requirements **shall not** be rewritten.
+- New requirements **shall** be introduced through incremental updates.
+- Requirement changes that affect architecture **shall** require an ADR before implementation.
+- Existing requirements may only be modified when correcting mistakes or reflecting an approved architectural decision.
 
 ---
 
@@ -119,6 +139,39 @@ AI coding agents generating or updating documentation **shall**:
 | **Minor corrections** (typos, clarifications) | Allowed without ADR. |
 | **Architectural changes** | Require an approved ADR before modifying other documents. |
 | **Breaking changes** | Require an approved ADR and synchronized updates to all affected documents. |
+
+---
+
+## Implementation Rule
+
+- Implementation is not the source of truth.
+- Documentation defines expected behavior.
+- If implementation differs from documentation, the discrepancy **shall** be reviewed.
+- Documentation **shall** only be updated after the design decision has been approved.
+- Code **shall** follow approved documentation rather than redefine it.
+
+---
+
+## Dependency Rule
+
+- Dependencies **shall** always point inward.
+- Domain **shall never** depend on Infrastructure.
+- Domain **shall never** depend on UI.
+- Application may depend on Domain.
+- Infrastructure may depend on Domain interfaces.
+- UI communicates with the Application layer only.
+- Plugins communicate only through published extension interfaces.
+- Direct cross-layer dependencies are prohibited unless explicitly documented.
+
+---
+
+## Documentation Versioning
+
+- Documentation evolves incrementally.
+- Large rewrites should be avoided.
+- Approved documents should receive targeted patches.
+- Architectural evolution **shall** be tracked using ADRs.
+- Documentation history should remain understandable over time.
 
 ---
 
