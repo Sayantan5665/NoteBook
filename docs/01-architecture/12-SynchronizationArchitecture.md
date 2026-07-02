@@ -81,6 +81,23 @@ Each Notebook installation is assigned a persistent, locally-generated UUID (`de
 
 The `syncVersion` is a monotonically increasing integer maintained per device. It is incremented each time the device successfully completes a sync operation. It is used for ordering: a device with a higher `syncVersion` has more recent changes.
 
+### 3.4 Manifest Fields Used by Sync
+
+The sync subsystem reads and writes the following fields from `manifest.json`. All other manifest fields are read-only from the sync subsystem's perspective — they are owned by other subsystems (Workspace Manager, migration controller).
+
+| Field | Read / Write | Sync Usage |
+|---|---|---|
+| `workspaceId` | Read | Used as the Google Drive remote folder identifier |
+| `schemaVersion` | Read | Checked before restore; prevents a newer-schema Workspace being opened by an older app |
+| `applicationVersion` | Read | Logged for compatibility diagnostics |
+| `devices[deviceId].syncVersion` | Read + Write | Core conflict detection signal; incremented after each successful sync |
+| `devices[deviceId].lastSyncAt` | Read + Write | Timestamp of last successful sync for this device |
+| `lastModifiedAt` | Read + Write | Used as tie-breaker in conflict detection; updated after sync |
+| `lastModifiedBy` | Read + Write | Records which device last committed a sync |
+| `lastSyncAt` | Write | Top-level timestamp updated after every successful sync |
+
+> The complete `manifest.json` field reference, including all current and future fields, is in [15-WorkspaceManifest.md §3](./15-WorkspaceManifest.md).
+
 ---
 
 ## 4. What Is Synchronized

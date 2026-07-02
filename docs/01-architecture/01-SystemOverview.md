@@ -4,7 +4,7 @@
 > **Status:** Draft
 > **Applies To:** Notebook — All Versions
 > **Related Documents:**
-> [02-CleanArchitecture.md](./02-CleanArchitecture.md) · [03-Monorepo.md](./03-Monorepo.md) · [04-Electron.md](./04-Electron.md) · [05-Angular.md](./05-Angular.md) · [06-IPC.md](./06-IPC.md) · [../00-overview/01-Vision.md](../00-overview/01-Vision.md) · [../00-overview/03-Scope.md](../00-overview/03-Scope.md)
+> [02-CleanArchitecture.md](./02-CleanArchitecture.md) · [03-Monorepo.md](./03-Monorepo.md) · [04-Electron.md](./04-Electron.md) · [05-Angular.md](./05-Angular.md) · [06-IPC.md](./06-IPC.md) · [15-WorkspaceManifest.md](./15-WorkspaceManifest.md) · [../00-overview/01-Vision.md](../00-overview/01-Vision.md) · [../00-overview/03-Scope.md](../00-overview/03-Scope.md)
 
 ---
 
@@ -478,3 +478,34 @@ flowchart TD
 - The Search Service **shall** access data only through `ISearchRepository` and `IEmbeddingRepository` — never by querying SQLite directly.
 - AI features **shall** use the Retrieval Service (which wraps semantic search) to retrieve context — they do not call the Search Service directly.
 - Future re-ranking support (cross-encoder models) can be added as an optional post-processing step in the Ranking stage without changing the search query path.
+
+---
+
+## 18. Workspace Manifest
+
+Every Workspace contains a `manifest.json` file at its root. The Workspace Manifest is the **single source of truth for Workspace identity and metadata**. It is read before `database.db` is opened and is the foundation for Workspace discovery, database migration, synchronization, backup, and import/export.
+
+### 18.1 Role of the Manifest
+
+| Concern | Manifest Role |
+|---|---|
+| **Workspace identity** | Stores the `workspaceId` (immutable UUID) and `workspaceName` |
+| **Schema versioning** | `schemaVersion` drives the database migration decision on every open |
+| **Application compatibility** | `applicationVersion` allows detection of Workspaces from incompatible future versions |
+| **Workspace discovery** | Startup scans for `manifest.json` files instead of opening databases — fast and safe |
+| **Sync coordination** | Per-device `syncVersion` and timestamps enable conflict detection across devices |
+| **Backup validation** | The manifest is the first artifact validated before a restore is attempted |
+| **Import/Export** | The manifest is the first file in every export archive and the first artifact validated on import |
+
+### 18.2 Manifest vs. Database Responsibility
+
+The Manifest and the database are complementary. They **shall not** duplicate data:
+
+| Data | Location |
+|---|---|
+| Workspace identity, version, and operational metadata | `manifest.json` |
+| Notes, Folders, Attachments, Tags, Todos, AI Chats, Version History | `database.db` |
+| FTS5 search index, sqlite-vec embeddings | `database.db` |
+| Raw attachment files | `attachments/` |
+
+See [15-WorkspaceManifest.md](./15-WorkspaceManifest.md) for the complete manifest specification, field reference, discovery flow, migration flow, import/export validation sequence, and future capability design.
