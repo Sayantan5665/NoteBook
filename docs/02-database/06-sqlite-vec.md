@@ -90,6 +90,38 @@ Embeddings are generated for two source types:
 
 Embeddings are **not** generated for attachment types that have no extractable text (e.g., audio, video files without transcription).
 
+### 4.4 Embedding Granularity
+
+Embeddings are generated at the **logical content chunk** level, not at the whole-document level. A single Note or Attachment may produce multiple embedding records — one per logical chunk.
+
+**Why chunk-level, not whole-document:**
+
+Embedding an entire note as a single vector produces an average representation of all the note's content. For a long note covering multiple topics, this average vector is unlikely to match any specific sub-topic well during retrieval. A user asking a specific question will get a less relevant result from a blended whole-document vector than from a focused chunk-level vector that represents the specific passage they need.
+
+Chunk-level embeddings provide the following advantages for RAG:
+
+- **Better retrieval precision:** Each chunk represents a focused topic. A narrow query matches the relevant chunk directly rather than competing against unrelated content in the same document.
+- **Precise citations:** The AI context builder can include the specific section, heading, or paragraph that supports a claim — not the entire note. This makes AI responses more verifiable.
+- **Efficient context windows:** Retrieving N relevant chunks from different notes fits more useful information into the model's context window than retrieving N entire notes.
+- **Graceful degradation on long documents:** Chunking prevents very long documents from dominating the vector space with a single high-dimensional average.
+
+**Intended chunk boundaries for notes:**
+
+| Chunk Type | Description |
+|---|---|
+| **Note sections** | Logical sections delimited by headings form the primary chunk boundary |
+| **Headings** | Each heading is embedded with its immediately following content as context |
+| **Paragraph groups** | Adjacent semantically-cohesive paragraphs are grouped and embedded together |
+
+**Intended chunk boundaries for attachments:**
+
+| Chunk Type | Description |
+|---|---|
+| **OCR text chunks** | OCR-extracted text is split into overlapping windows before embedding |
+| **Document chunks** | Parsed text from DOCX, PDF, Markdown, and plain text files is split into overlapping windows |
+
+**Scope of this document:** The `embeddings` table stores one metadata row and one vector per chunk. The `source_id` on a chunk-level embedding record identifies the parent Note or Attachment, not the chunk itself. Chunk boundaries, overlap size, and minimum chunk length are AI implementation concerns defined in the AI architecture documentation. This document defines only that chunk-based embedding is the strategy and why it is preferable to whole-document embedding.
+
 ---
 
 ## 5. Vector Indexing

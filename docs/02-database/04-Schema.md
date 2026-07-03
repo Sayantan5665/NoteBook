@@ -117,7 +117,15 @@ Quick reference:
 | `updated_at` | DATETIME | NOT NULL | UTC timestamp of last content save |
 | `deleted_at` | DATETIME | NULL | UTC timestamp of soft delete; NULL = active |
 
-**Design Note — body storage format:** The `body` column stores the Tiptap document as a JSON string. Storing structured JSON (rather than raw HTML) enables version diffing, richer search parsing, and future export transformations without requiring an HTML parser at the repository layer.
+**Design Note — body storage format (Tiptap Storage Strategy):** The `body` column stores the Tiptap document as a serialized JSON string. The Tiptap JSON document is the authoritative representation of note content. Generated HTML is a rendering format, not the source of truth — it is produced on-demand by the editor for display purposes and is never persisted.
+
+This decision provides the following advantages:
+
+- **Structured document model:** JSON captures document structure (headings, paragraphs, lists, code blocks, tables) with semantic fidelity that raw HTML does not guarantee. Parsing a Tiptap JSON document is deterministic; parsing raw HTML is not.
+- **Better editor compatibility:** The Tiptap editor reads and writes its own JSON format natively. Storing JSON avoids a serialization round-trip on every open and save.
+- **Easier future migrations:** If the document schema changes (e.g., a new node type is added), migrating Tiptap JSON is well-defined. Migrating raw HTML requires a fragile HTML parser and heuristics.
+- **Better AI processing:** Extracting plain text for embedding generation from a structured JSON document is straightforward and deterministic. Extracting from raw HTML requires stripping tags and handling edge cases.
+- **Cleaner serialization:** JSON is a first-class data type in the application stack (TypeScript, Prisma, SQLite TEXT). HTML is a display artifact. Keeping display formats out of the source-of-truth column prevents subtle content corruption from editor-to-storage-to-editor round-trips.
 
 ---
 
@@ -125,8 +133,27 @@ Quick reference:
 
 **Responsibility:** Metadata records for binary files attached to Notes. The actual file bytes live in `attachments/<id>.<ext>` on the filesystem. This table is the directory of all attachments; the filesystem is the storage medium.
 
+**Attachment Ownership Model:**
+
+Attachments are independent, first-class entities. The relationship between Notes and Attachments is a reference, not an embedding:
+
+- Attachments are **not** embedded inside Note records. The `notes.body` column does not contain attachment file data.
+- Notes reference Attachments through the `attachments.note_id` foreign key. Multiple Notes **may** reference the same Attachment (e.g., the same PDF attached to several related notes).
+- Attachment metadata is stored in SQLite (`attachments` table). The binary file content resides in `attachments/` on the Workspace filesystem.
+- Deleting a Note does not automatically delete the binary file from the filesystem — the repository layer handles file deletion after the database record cascade completes, ensuring no orphaned files result from a failed delete.
+
+**Advantages of this design:**
+
+| Advantage | Description |
+|---|---|
+| **File deduplication** | A single binary file can be referenced by multiple notes without storing multiple copies |
+| **Independent lifecycle** | An attachment can be queried, searched, and processed independently of the note that contains it |
+| **Efficient sync** | `attachments/` files are synced incrementally by the sync subsystem based on file-level checksums — not as part of the database |
+| **Streaming reads** | The OCR and thumbnail pipelines open attachment files directly from the filesystem without loading the database |
+| **Clean separation** | The database stores what attachments mean; the filesystem stores what attachments contain |
+
 **Relationships:**
-- Many-to-one with `notes`: an Attachment belongs to one Note
+- Many-to-one with `notes`: an Attachment belongs to one Note (via `note_id`)
 - One-to-many with `attachment_tags`: junction for Tag associations
 - Zero-or-one with `embeddings`: vector embedding record
 
@@ -245,6 +272,19 @@ Quick reference:
 ### 3.7 `todos`
 
 **Responsibility:** Task records within a Workspace. Todos are first-class entities, not merely checklist items inside Note content. They may be associated with a Note to provide context.
+
+**Ownership Model:**
+
+A Todo may optionally belong to a Note via the nullable `note_id` column:
+
+- **Standalone Todos** (`note_id = NULL`): exist independently of any Note. They appear in the global Todo list and represent tasks that are not tied to a specific piece of content.
+- **Note-specific Todos** (`note_id = <uuid>`): associated with a Note to provide context. They appear in both the global Todo list and the detail panel of the referenced Note.
+
+This optional-reference design provides flexibility without increasing complexity:
+
+- No additional table is required — the optional FK is sufficient to express both modes.
+- The lifecycle of a standalone Todo is self-contained. If the associated Note is deleted, `note_id` is set to `NULL` via the `ON DELETE SET NULL` rule, converting a note-specific Todo to a standalone Todo rather than deleting it. This prevents task data loss when a note is removed.
+- The two modes are treated identically by the repository layer — queries filter on `deleted_at IS NULL` regardless of `note_id`.
 
 **Relationships:**
 - Many-to-one with `notes` (optional): a Todo may reference a Note
@@ -573,3 +613,86 @@ Quick reference:
 - **Note relations table:** If typed inter-note relations (beyond wiki links) are added, a `note_relations` table with `relation_type` would extend the current wiki link model.
 - **Attachment versions:** If attachments become versioned (user can update a file while keeping the history), a `attachment_versions` table mirrors the `version_history` pattern.
 - **Shared tags across Workspaces:** Out of scope in V1. Each Workspace has its own `tags` table. If cross-Workspace tag sharing is added in the future, it requires an application-layer merge operation, not a schema foreign key.
+
+---
+
+## 8. Searchable Content
+
+This section defines which content participates in search and through which search mechanism. Search in Notebook operates across three complementary modes.
+
+### 8.1 Keyword Search (FTS5)
+
+Keyword search uses SQLite FTS5 full-text search. It matches exact words and phrases against indexed text content. FTS5 is fast, deterministic, and requires no AI model.
+
+**Content indexed for keyword search:**
+
+| Content | Source |
+|---|---|
+| Note titles | `notes.title` → `fts_notes` |
+| Note body content | Plain text extracted from Tiptap JSON body → `fts_notes` |
+| OCR-extracted text from image attachments | `cache/ocr/<id>.txt` → `fts_attachments` |
+| OCR-extracted text from scanned PDFs | `cache/ocr/<id>.txt` → `fts_attachments` |
+| Parsed text from DOCX files | Text extracted from Word documents by the attachment pipeline → `fts_attachments` |
+| Parsed text from PDF files | Text layer extracted from native PDFs → `fts_attachments` |
+| Parsed text from Markdown files | Raw text of `.md` attachments → `fts_attachments` |
+| Parsed text from plain text files | Raw text of `.txt` attachments → `fts_attachments` |
+
+**Content NOT indexed for keyword search:**
+
+- Folder names — folder navigation is handled by the folder tree UI, not search
+- Tag names — tag filtering is a separate, dedicated filter operation
+- Attachment filenames — attachment filename search is handled by the attachment browser with a simple `LIKE` filter, not FTS5
+- Binary-only attachments (images without OCR text, audio, video) — no text to index
+
+### 8.2 Semantic Search (sqlite-vec)
+
+Semantic search uses embedding vectors stored in the `vec_embeddings` sqlite-vec virtual table. It retrieves content based on meaning rather than exact word matches. A query for "project deadline" may retrieve a note about "upcoming milestones" that contains no exact match.
+
+**Content indexed for semantic search:**
+
+| Content | Granularity | Notes |
+|---|---|---|
+| Note content | Logical content chunks (sections, headings, paragraph groups) | Chunk-based embeddings; see §8.4 |
+| Attachment OCR text | Logical text chunks | OCR text is chunked before embedding |
+| Attachment parsed text | Logical document chunks | DOCX, PDF, Markdown, plain text |
+
+**Content NOT indexed for semantic search:**
+
+- Folder names, tag names, attachment filenames — structural metadata does not benefit from semantic similarity
+- Binary-only attachments with no extractable text
+
+### 8.3 Hybrid Search
+
+Hybrid search combines keyword (FTS5) and semantic (sqlite-vec) results into a single ranked list. The ranking function merges FTS5 BM25 scores and sqlite-vec cosine similarity scores using a configurable weighting strategy.
+
+Hybrid search provides the best recall: it catches content that exactly matches a keyword (FTS5 strength) and content that is semantically related but does not contain the exact words (sqlite-vec strength).
+
+The search architecture routes the query to both systems in parallel, collects results, deduplicates by entity UUID, and returns a unified ranked list to the UI.
+
+### 8.4 Embedding Granularity
+
+Embeddings are generated for **logical content chunks** rather than for the entire document at once. Embedding a full note as a single vector loses the semantic distinctiveness of individual sections — a long note about two unrelated topics produces a blended vector that may not match either topic well in retrieval.
+
+**Intended granularity for notes:**
+
+| Chunk Type | Description |
+|---|---|
+| Headings | Each heading is embedded as a standalone chunk with its immediate context |
+| Paragraph groups | Adjacent paragraphs on the same topic are grouped and embedded together |
+| Note sections | Logical sections delimited by headings form the primary chunking boundary |
+
+**Intended granularity for attachments:**
+
+| Chunk Type | Description |
+|---|---|
+| Document chunks | OCR and parsed text is split into fixed-size overlapping windows |
+| OCR text chunks | Extracted OCR text is chunked before embedding to improve retrieval accuracy |
+
+**Why chunk-based embeddings provide better RAG than whole-document embeddings:**
+
+- A whole-document embedding is an average of all content in the document. In retrieval, it is less likely to score highly against a specific, narrow query because the vector represents the entire topic spread of the document.
+- A chunk-level embedding represents a focused sub-topic. Retrieval of a specific chunk means the AI context builder can include the most relevant section of a note, not the entire note.
+- Chunk-level retrieval enables precise citation: the AI response can cite the specific paragraph or section from which a claim derives, not just "Note X."
+- Smaller, focused chunks reduce the token budget required for each RAG context window — more distinct topics can be retrieved within the model's context limit.
+
+**Note:** Chunk size, overlap, and chunking strategy are AI implementation details and are defined in the AI architecture documentation, not here.

@@ -297,7 +297,50 @@ FTS5 virtual tables in SQLite are created per database. Because each Workspace h
 
 ---
 
-## 3. Principles Summary Table
+## 3. Universal Entity Conventions
+
+The following conventions apply to every entity in the Notebook database unless explicitly noted as an exception. They are derived from the principles above and must remain consistent across the entire schema.
+
+### 3.1 Primary Key Rules
+
+Every entity **shall** use a stable Version 4 UUID stored as `TEXT` as its primary key. The following rules are absolute:
+
+| Rule | Description |
+|---|---|
+| **Stable** | IDs are assigned at creation and never change for the lifetime of the entity |
+| **Immutable** | No update operation may change an entity's `id` column |
+| **Never reused** | When an entity is permanently deleted, its UUID is retired — it is never assigned to a new entity |
+| **Survive import/export** | An entity exported from a Workspace and imported into another Workspace retains its original UUID |
+| **Survive synchronization** | Google Drive sync transfers entities with their UUIDs intact — sync never reassigns IDs |
+| **Survive backups** | An entity restored from a backup retains its UUID — restore never reassigns IDs |
+
+**Why this matters:** UUID stability is the foundation of safe cross-device sync, import/export, and wiki link resolution. A note's UUID is the stable anchor that all other references (wiki links, embeddings, version history, todos) rely on. If IDs could change, every reference to a note would need to be found and updated — an unsafe, fragile operation.
+
+### 3.2 Standard Audit Columns
+
+Entities follow a standard set of column conventions. Not every column applies to every entity — some entities do not require soft delete, others do not require update tracking. The convention defines what a column means when it is present. If a column is not applicable to an entity, it is omitted rather than added with a default value that carries no meaning.
+
+| Column | Type | Convention |
+|---|---|---|
+| `id` | TEXT NOT NULL | UUID v4 primary key — stable, immutable, never reused |
+| `created_at` | DATETIME NOT NULL | UTC timestamp of the moment the entity row was first inserted |
+| `updated_at` | DATETIME NOT NULL | UTC timestamp of the most recent mutation to any column of the row; updated on every write |
+| `deleted_at` | DATETIME NULL | UTC timestamp of soft deletion; `NULL` means active. Present on entities with Trash/restore behavior |
+| `created_by` | TEXT NULL | Reserved for future multi-user or plugin attribution — the UUID of the actor that created the entity. Not enforced in V1; column is reserved |
+| `updated_by` | TEXT NULL | Reserved for future multi-user or plugin attribution — the UUID of the actor that last updated the entity. Not enforced in V1; column is reserved |
+
+**Applicability notes:**
+
+- `created_by` and `updated_by` are reserved for future support. They are **not** present in the V1 schema. When multi-actor or plugin attribution is introduced, they will be added via a nullable additive migration — no existing data will be disrupted.
+- Junction tables (`note_tags`, `attachment_tags`) record only `created_at` — they do not have an `updated_at` or `deleted_at` because associations are either created or deleted, never modified in place.
+- Immutable tables (`version_history`, `chat_messages`) record only `created_at` — they are never updated, so `updated_at` carries no meaning and is omitted.
+- Tables without soft delete (`tags`, `wiki_links`, `plugin_configurations`) do not include `deleted_at`.
+
+**Consistency principle:** Even when a column is omitted because it is not applicable, the meaning of the column **shall** remain constant across the entire schema. `deleted_at` always means soft delete. `updated_at` always means last mutation. `created_at` always means first insert. No table may repurpose these column names for a different semantic.
+
+---
+
+## 4. Principles Summary Table
 
 | Principle | One-Line Summary |
 |---|---|
@@ -317,7 +360,7 @@ FTS5 virtual tables in SQLite are created per database. Because each Workspace h
 
 ---
 
-## 4. Future Considerations
+## 5. Future Considerations
 
 - **Delta compression for version history:** Future versions may store diffs rather than full snapshots to reduce storage cost for heavily edited notes.
 - **Per-Workspace encryption:** SQLCipher integration would add transparent encryption at the SQLite file level. The per-database layout (P-01) is a prerequisite. Each Workspace would have an independent encryption key.

@@ -49,6 +49,33 @@ Every time a Note is saved, a snapshot of its title and body is appended to the 
 - Snapshots are identified by `version_number` — a monotonically increasing integer per Note, starting at 1.
 - The latest snapshot always represents the state of the note at its last save.
 
+**Design Decision — Immutable Full Snapshots**
+
+Version history stores complete, immutable snapshots of the note's title and body at each save point. This is a deliberate architectural choice over the alternative of storing diffs (incremental changes between versions).
+
+*Why immutable snapshots were chosen:*
+
+| Consideration | Immutable Snapshots | Diff-Based Storage |
+|---|---|---|
+| **Restore simplicity** | Restoring version N is a direct read of one row — no reconstruction required | Restoring version N requires replaying the diff chain from the base snapshot forward to version N |
+| **Correctness** | Every snapshot is self-contained and independently valid. Corruption of one snapshot does not affect any other | A corrupted diff in the middle of a chain makes all subsequent versions unrestorable |
+| **Simplicity** | The implementation is straightforward: `INSERT INTO version_history ...` on every save | Diff computation and storage is complex; a diff library must be embedded and maintained |
+| **Reliability** | A snapshot read always succeeds, regardless of the state of other rows | A diff chain read requires every intermediate diff to be intact and correctly applied |
+| **AI compatibility** | Any snapshot can be directly passed to the AI or embedding pipeline without reconstruction | Each version must be reconstructed before it can be used by downstream processes |
+| **Debuggability** | Any snapshot is human-readable in the database without any tooling | Diffs require a reconstruction tool to read meaningfully |
+
+*Future migration to diff storage:*
+
+The immutable snapshot design does not foreclose a future migration to delta compression. Because each snapshot is a complete, standalone document, a future migration could:
+
+1. Select a base snapshot (e.g., the oldest retained version).
+2. Compute diffs from each snapshot to the next.
+3. Replace the intermediate snapshots with diffs, retaining only keyframes.
+
+This migration can be performed without any application downtime or user-visible data loss, because the full snapshot data is available as the source for diff computation. Choosing diff storage from the start, by contrast, would make migration to snapshots difficult (snapshots would need to be reconstructed from diffs before the migration could complete).
+
+For V1, the simplicity and reliability of immutable snapshots outweigh the storage cost benefit of diffs. Delta compression is documented as a future consideration in §9.1.
+
 ### 3.2 Version Number Scheme
 
 ```
