@@ -5,13 +5,13 @@
 > **Status:** Draft
 > **Applies To:** Notebook — All Versions
 > **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §3](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/01-SystemOverview.md §6](../../01-architecture/01-SystemOverview.md) · [../../01-architecture/ADR-009-WorkspaceIsolation.md](../../01-architecture/ADR-009-WorkspaceIsolation.md) · [../../01-architecture/ADR-010-WorkspaceManifest.md](../../01-architecture/ADR-010-WorkspaceManifest.md) · [../../01-architecture/15-WorkspaceManifest.md](../../01-architecture/15-WorkspaceManifest.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> [../../00-overview/04-FunctionalRequirements.md §3](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/01-SystemOverview.md §6](../../01-architecture/01-SystemOverview.md) · [../../01-architecture/ADR-009-WorkspaceIsolation.md](../../01-architecture/ADR-009-WorkspaceIsolation.md) · [../../01-architecture/ADR-010-WorkspaceManifest.md](../../01-architecture/ADR-010-WorkspaceManifest.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
 
 ---
 
-## Purpose
+## 1. Purpose
 
-The Workspace module governs the complete lifecycle of a Workspace — the top-level container that holds all of a user's notes, folders, attachments, todos, tags, AI chats, and settings.
+The Workspace module governs the complete lifecycle of a Workspace — the top-level logical container that holds all of a user's notes, folders, attachments, todos, tags, AI chats, and settings. 
 
 A Workspace is the fundamental unit of isolation in Notebook. Every user action operates within the context of exactly one active Workspace. The Workspace module defines how Workspaces are created, opened, closed, switched, renamed, deleted, backed up, and managed on the local filesystem.
 
@@ -19,9 +19,9 @@ This module is the root dependency for almost all other modules: nothing in the 
 
 ---
 
-## Scope
+## 2. Scope
 
-**This module covers:**
+**This document covers:**
 - Creating a new Workspace (choosing name and local directory)
 - Opening an existing Workspace from the filesystem
 - Switching between multiple Workspaces in a single session
@@ -32,19 +32,17 @@ This module is the root dependency for almost all other modules: nothing in the 
 - Workspace health checks on open (manifest validation, schema version check)
 - Workspace close (clean teardown, connection release)
 
-**This module does NOT cover:**
+**This document does NOT cover:**
 - Backup and restore (see `backup/`)
 - Google Drive synchronization (see `sync/`)
 - Import and export (see `import-export/`)
-- Per-Workspace settings (see `settings/`)
 - Note, folder, and attachment operations within a Workspace (see respective modules)
 
 ---
 
-## Responsibilities
+## 3. Ownership and Responsibilities
 
 This module is responsible for:
-
 - Creating the Workspace directory structure on the local filesystem
 - Writing and reading `manifest.json` as the Workspace identity and version record
 - Initializing and migrating the `database.db` for each Workspace
@@ -52,52 +50,88 @@ This module is responsible for:
 - Maintaining the recent Workspaces list in application-level storage
 - Detecting and handling incompatible Workspace versions (`schemaVersion` and `formatVersion` checks)
 - Surfacing Workspace-level metadata to the UI (name, path, schema version, last opened)
-- Performing pre-migration backups before applying database migrations
 - Enforcing single-active-Workspace semantics within a session
 
----
-
-## Planned Specification Documents
-
-| File | Status | Content |
-|---|---|---|
-| `01-WorkspaceLifecycle.md` | Planned | Create, open, close, switch, rename, delete workflows and state transitions |
-| `02-WorkspaceManifest.md` | Planned | Manifest reading, validation, writing, and version compatibility rules |
-| `03-WorkspaceMigration.md` | Planned | Schema migration flow, pre-migration backup requirement, failure handling |
-| `04-RecentWorkspaces.md` | Planned | Recent Workspaces list management, launch screen behavior |
-| `05-WorkspaceHealthCheck.md` | Planned | Startup integrity checks, manifest validation, database integrity verification |
+The Workspace module **strictly owns** only the Workspace lifecycle. It does NOT own Notes, Folders, Attachments, Search, AI, Synchronization, or Plugins. Those modules consume the active Workspace.
 
 ---
 
-## Key Business Rules (Summary)
+## 4. Public Interfaces
 
-- A Workspace is a local directory — it is never cloud-first.
-- Every Workspace has exactly one `manifest.json` and one `database.db`.
-- No two open Workspaces share the same database connection.
-- The Workspace Manager is the only component that may create, open, or close a Prisma client.
-- Deleting a Workspace permanently removes all its local files — this action is irreversible and requires explicit user confirmation.
-- Opening a Workspace whose `schemaVersion` is higher than `CURRENT_SCHEMA_VERSION` is refused — the user must upgrade the application.
-- A pre-migration backup is created automatically before any migration runs; the open is aborted if the backup fails.
+The Workspace module exposes the following logical capabilities to the application layer:
+- `CreateWorkspace`: Initializes a new Workspace directory, manifest, and database.
+- `OpenWorkspace`: Validates, optionally migrates, and connects to a Workspace.
+- `CloseWorkspace`: Safely flushes state and closes database connections.
+- `DeleteWorkspace`: Permanently removes the Workspace directory from disk.
+- `RenameWorkspace`: Updates the Workspace name in the manifest.
+- `GetActiveWorkspace`: Returns the context of the currently open Workspace.
+- `GetRecentWorkspaces`: Returns the history of previously opened Workspaces.
 
 ---
 
-## Requirements Traced
+## 5. Consumed Interfaces
 
-| Requirement | Description |
+The Workspace module consumes:
+- Filesystem APIs (for directory creation, manifest reading/writing, database initialization)
+- SQLite Database Provider (for schema migration and connection management)
+
+---
+
+## 6. Published Events
+
+| Event | Description |
 |---|---|
-| FR-WS-01 | Create a new Workspace |
-| FR-WS-02 | Open an existing Workspace |
-| FR-WS-03 | Rename a Workspace |
-| FR-WS-04 | Delete a Workspace |
-| FR-WS-05 | Support multiple Workspaces, switchable without restart |
-| FR-WS-06 | Each Workspace maintains independent data |
-| FR-WS-07 | Persist and display recently opened Workspaces |
-| FR-WS-08 | Store Workspace as a local directory with SQLite and attachments |
+| `WorkspaceCreated` | Emitted when a new Workspace directory and manifest are successfully created. |
+| `WorkspaceOpened` | Emitted when a Workspace is successfully loaded and connected. |
+| `WorkspaceClosed` | Emitted when the active Workspace is cleanly closed. |
+| `WorkspaceRenamed` | Emitted when the Workspace name is updated in the manifest. |
+| `WorkspaceDeleted` | Emitted when a Workspace is permanently deleted from the filesystem. |
+| `WorkspaceMigrationCompleted` | Emitted when a database migration completes successfully during open. |
 
 ---
 
-## Future Considerations
+## 7. Consumed Events
 
-- **Workspace templates:** Allow creating a new Workspace pre-populated from a template (e.g., "Personal Journal", "Project Notes") with default folder structure.
-- **Workspace locking:** Detect and prevent two application instances from opening the same Workspace simultaneously.
-- **Workspace encryption:** SQLCipher-based at-rest encryption, keyed per Workspace. The manifest would store the salt; the user provides the passphrase on open.
+The Workspace module does not typically consume domain events from other modules, as it sits at the root of the dependency graph. 
+
+---
+
+## 8. Dependencies
+
+- **Infrastructure:** SQLite (via Prisma), Local Filesystem
+- **System:** OS-level path constraints and directory access permissions
+
+---
+
+## 9. Extension Points
+
+- None. The Workspace lifecycle is a core system capability and is not extensible via plugins.
+
+---
+
+## 10. Background Jobs
+
+- None. Workspace management operations are user-initiated and synchronous (or block the UI until completion).
+
+---
+
+## 11. Settings
+
+Workspace settings are managed via the Settings module. The Workspace module itself stores only its core identity (name, ID, versions) in `manifest.json`.
+
+---
+
+## 12. Acceptance Criteria
+
+- A new Workspace can be created, populated with content, closed, and successfully reopened with all content intact.
+- Multiple Workspaces can be active and switchable in a single application session.
+- Deleting a Workspace removes all associated local data from the filesystem.
+- Opening a Workspace whose `schemaVersion` is higher than `CURRENT_SCHEMA_VERSION` is refused.
+- A pre-migration backup is created automatically before any migration runs.
+
+---
+
+## 13. Cross References
+
+- **Architecture:** [15-WorkspaceManifest.md](../../01-architecture/15-WorkspaceManifest.md), [ADR-009-WorkspaceIsolation.md](../../01-architecture/ADR-009-WorkspaceIsolation.md)
+- **Database:** [02-StorageLayout.md](../../02-database/02-StorageLayout.md)
