@@ -1,95 +1,115 @@
+> **Document Type:** Module Specification
+> **Status:** Draft
+> **Version:** 1.0
+> **Depends On:** Notes Module
+> **Document Owner:** Core Architecture Team
+
 # Tags Module
 
-> **Document Type:** Module README
-> **Module:** tags
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §13](../../00-overview/04-FunctionalRequirements.md) · [../../02-database/04-Schema.md §3.4](../../02-database/04-Schema.md) · [../notes/README.md](../notes/README.md) · [../attachments/README.md](../attachments/README.md) · [../search/README.md](../search/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
-
 ---
 
-## Purpose
+## 1. Purpose
 
-The Tags module defines how users create, assign, browse, filter by, rename, and delete tags within a Workspace. Tags are user-defined labels that can be applied to notes and attachments, providing a flexible, flat (non-hierarchical) classification system that complements the folder hierarchy.
+The Tags module manages user-defined labels that classify, organize, and discover Notes. It provides a flexible metadata layer that operates independently of the strict Folder hierarchy, allowing Notes to be grouped across multiple conceptual dimensions.
 
-Tags are Workspace-scoped — a tag defined in one Workspace is not visible in any other Workspace. Tags are a lightweight cross-cutting concern: the same tag can apply to notes in any folder, and multiple tags can apply to a single note.
+## 2. Scope
 
----
+**This document covers:**
+- Tag identity and lifecycle.
+- Relationships between Notes and Tags.
+- Tag validation and event models.
+- Tag organization and future extension points.
 
-## Scope
+**This document does NOT cover:**
+- Note content editing or Editor behavior.
+- Search algorithm implementations.
+- AI or machine learning models for auto-tagging.
+- Database schema or storage implementations.
+- Synchronization or Backup mechanics.
 
-**This module covers:**
-- Creating tags (inline during note editing or via the tag manager)
-- Applying tags to notes
-- Applying tags to attachments
-- Removing a tag from a note or attachment
-- Browsing all tags in the Workspace (tag browser/sidebar)
-- Filtering the note list by one or more tags
-- Renaming a tag Workspace-wide (all associations are updated automatically)
-- Deleting a tag Workspace-wide (all associations are removed)
-- Displaying the tag badge list on a note or attachment
-- Autocomplete suggestions when entering tag names
+## 3. Responsibilities
 
-**This module does NOT cover:**
-- Tag-based full-text search ranking (see `search/`)
-- Tag-based AI filtering (see `ai/`)
+- **Identity Management:** Issuing and tracking immutable UUIDs for Tags.
+- **Lifecycle Management:** Creating, renaming, merging, and deleting Tags.
+- **Relationship Management:** Maintaining the many-to-many relationship registry between Tags and Notes.
+- **Validation:** Ensuring Tag names conform to naming rules and uniqueness constraints.
 
----
+## 4. Ownership and Boundaries
 
-## Responsibilities
+- **Ownership:** This module owns the Tag domain completely.
+- **Boundaries:** Tags are metadata attached to Notes. Notes reference Tags, but Tags NEVER own Notes. Deleting a Tag removes the relationship but NEVER deletes the underlying Notes.
 
-This module is responsible for:
+### 4.1 Canonical Tag Flow
+A conceptual workflow illustrating the role of Tags within the system:
 
-- Creating `tags` table rows (enforcing case-insensitive uniqueness within a Workspace)
-- Creating and deleting `note_tags` and `attachment_tags` junction rows
-- Providing tag autocomplete data to the editor and note panel
-- Providing the complete tag list to the tag browser UI
-- Performing Workspace-wide tag rename (updating `tags.name`)
-- Performing Workspace-wide tag deletion (deleting `tags` row; cascade removes all junction rows)
-- Filtering note list queries by tag (joining through `note_tags`)
+`Tag` &rarr; `Tag Relationship` &rarr; `Note` &rarr; `Search` &rarr; `AI` &rarr; `Synchronization`
 
----
+- Tags remain the canonical metadata entity.
+- Search and AI consume Tag relationships.
+- Synchronization preserves Tag identity and relationships.
+- Ownership boundaries remain unchanged across these flows.
 
-## Planned Specification Documents
+## 5. Tag Capabilities
+Tags expose capabilities consumed by other modules. They are NOT responsibilities owned by the Tags module.
+- Can classify Notes.
+- Can participate in filtering.
+- Can participate in Search.
+- Can be synchronized.
+- Can be exported.
+- Can participate in AI retrieval.
+- Can participate in Smart Collections (future).
 
-| File | Status | Content |
-|---|---|---|
-| `01-TagLifecycle.md` | Planned | Create, rename, delete workflows and constraints |
-| `02-TagAssignment.md` | Planned | Assigning and removing tags from notes and attachments |
-| `03-TagBrowser.md` | Planned | Tag browser/sidebar, tag counts, click-to-filter behavior |
-| `04-TagFiltering.md` | Planned | Multi-tag filter semantics (AND vs OR), combined with folder and search filters |
+## 6. Dependencies
 
----
+- **Notes Module:** The Tags module observes Note lifecycles (e.g., to clean up relationships when a Note is permanently deleted).
 
-## Key Business Rules (Summary)
+## 7. Interfaces and Events
 
-- Tag names are case-insensitive. "Work" and "work" are the same tag.
-- Tag names are stored in a normalized form (lowercase) before saving, regardless of input casing.
-- A tag name must be unique within a Workspace. Attempting to create a duplicate tag name is resolved by reusing the existing tag.
-- Tags do not have a soft-delete state. Deleting a tag immediately removes it and all its associations.
-- Renaming a tag immediately renames it across all associated notes and attachments — there is no batch confirmation required.
-- Tags are Workspace-scoped. A tag in Workspace A cannot be applied to content in Workspace B.
-- A note or attachment may have any number of tags, including zero.
+### 7.1 Consumed Interfaces
+- None directly. The module provides interfaces for the Editor and Search modules to consume.
 
----
+### 7.2 Published Events
+- `TagCreated`
+- `TagRenamed`
+- `TagAssigned`
+- `TagRemoved`
+- `TagMerged`
+- `TagDeleted`
+- `TagRestored`
 
-## Requirements Traced
+### 7.3 Consumed Events
+- `NotePermanentDeleted` (Triggers relationship cleanup)
+- `NoteSaved` (May trigger `TagAssigned` or `TagRemoved` if the Note's tag payload changes)
 
-| Requirement | Description |
-|---|---|
-| FR-TAG-01 | Apply one or more tags to any note or attachment |
-| FR-TAG-02 | Tags are user-defined strings, Workspace-scoped |
-| FR-TAG-03 | Tag browser listing all Workspace tags |
-| FR-TAG-04 | Selecting a tag displays all associated notes and attachments |
-| FR-TAG-05 | Tags included in full-text search results |
-| FR-TAG-06 | Rename and delete tags Workspace-wide |
+## 8. Extension Points
 
----
+- Hierarchical/Nested Tags
+- Tag Aliases and Colors
+- Smart Tags and AI Generated Tags
 
-## Future Considerations
+## 9. Settings
 
-- **Hierarchical tags:** Allowing tags to have parent-child relationships (e.g., `work/project-x`). This would require a schema change and an ADR.
-- **Tag colors:** Assigning a color to a tag for visual differentiation. The schema already includes a `color` column; this is a UI feature pending specification.
-- **Tag-based note creation:** Creating a new note with a pre-applied tag from the tag browser context.
-- **Tag statistics:** Displaying the number of notes and attachments per tag in the tag browser, with trend indicators.
+- Conceptual preferences for tag sorting (alphabetical vs usage count) in presentation layers, though this is primarily UI-driven.
+
+## 10. Business Rules
+
+- **Immutable Identity:** Tags have immutable identities (UUIDs).
+- **Referential Integrity:** Notes reference Tags. Tags never own Notes.
+- **Many-to-Many:** Multiple Notes may reference the same Tag. Multiple Tags may reference the same Note.
+- **Safe Deletion:** Deleting a Tag never deletes Notes.
+- **Safe Renaming:** Renaming a Tag preserves all existing Note relationships.
+- **Validation:** Validation preserves Tag consistency and graph integrity.
+
+## 11. Acceptance Criteria
+
+- A Tag can be renamed from `#ideas` to `#brainstorming`, and all 50 Notes previously referencing it automatically reflect the new name without requiring a text payload update in all 50 Notes.
+- Deleting the `#brainstorming` Tag completely removes it from the Workspace registry, but leaves all 50 Notes perfectly intact.
+
+## 12. Cross References
+
+- [01-TagOverview.md](./01-TagOverview.md)
+- [02-TagLifecycle.md](./02-TagLifecycle.md)
+- [03-TagRelationships.md](./03-TagRelationships.md)
+- [04-TagValidation.md](./04-TagValidation.md)
+- [05-TagEvents.md](./05-TagEvents.md)
+- [06-ExtensionPoints.md](./06-ExtensionPoints.md)
