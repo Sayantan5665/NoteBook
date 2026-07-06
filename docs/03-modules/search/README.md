@@ -1,105 +1,110 @@
+> **Document Type:** Module Specification
+> **Status:** Draft
+> **Version:** 1.0
+> **Depends On:** Notes, Attachments, Tags, OCR, Wiki Links
+> **Document Owner:** Core Architecture Team
+
 # Search Module
 
-> **Document Type:** Module README
-> **Module:** search
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §8](../../00-overview/04-FunctionalRequirements.md) · [../../00-overview/04-FunctionalRequirements.md §9](../../00-overview/04-FunctionalRequirements.md) · [../../02-database/04-Schema.md §8](../../02-database/04-Schema.md) · [../../02-database/05-SQLite.md](../../02-database/05-SQLite.md) · [../../02-database/06-sqlite-vec.md](../../02-database/06-sqlite-vec.md) · [../../02-database/08-Indexes.md §6](../../02-database/08-Indexes.md) · [../ai/README.md](../ai/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
-
 ---
 
-## Purpose
+## 1. Purpose
 
-The Search module defines the behavior of the unified search experience in Notebook: how users query their knowledge base, what content is found, how results are ranked, and how the three search modes — keyword (FTS5), semantic (sqlite-vec), and hybrid — work together.
+The Search module provides powerful, centralized discovery capabilities across the entire Notebook ecosystem. It enables users to instantly find Notes, Tags, Attachments, and extracted text via a unified indexing and querying mechanism.
 
-Search is a core capability of any knowledge management tool. In Notebook, search is offline-first and Workspace-scoped: all search operations run entirely on the local machine against the active Workspace's database, with no external service.
+## 2. Scope
 
----
+**This document covers:**
+- Search concepts and query philosophies.
+- Search indexing philosophy and aggregation of data from other modules.
+- The lifecycle of search requests and background index updates.
+- Validation and error handling within the search domain.
 
-## Scope
+**This document does NOT cover:**
+- Ranking algorithms (e.g., TF-IDF, BM25).
+- SQLite FTS5 implementation details.
+- Vector search or `sqlite-vec` implementations.
+- AI, Embeddings, or conversational search.
+- Synchronization or Backup mechanics.
 
-**This module covers:**
-- The search input interface (query bar, mode selector)
-- Full-text keyword search (FTS5): query parsing, tokenization, result ranking, snippet generation
-- Semantic vector search (sqlite-vec): embedding the query, nearest-neighbor retrieval, similarity scoring
-- Hybrid search: result merging, deduplication by entity UUID, score normalization, final ranking
-- Search result display: title, excerpt, source type (note/attachment), relevance indicator
-- Search scope: always limited to the active Workspace
-- Filtering search results by type (notes only, attachments only, all)
-- Navigating to a result (opening the note or attachment)
-- Search history (recent queries within a session)
+## 3. Responsibilities
 
-**This module does NOT cover:**
-- Embedding generation for indexed content (see `ai/`)
-- FTS5 index maintenance (maintained by `notes/` and `attachments/` modules transactionally)
-- Vector index maintenance (maintained by `ai/`)
-- Tag-based filtering UI (see `tags/`)
+- **Indexing:** Consuming events from other modules to build and maintain derived searchable artifacts (indexes).
+- **Querying:** Accepting user or system queries and returning relevant result pointers.
+- **Lifecycle Management:** Orchestrating incremental index updates and full reindexes.
+- **Validation:** Ensuring queries are structurally valid before execution.
 
----
+## 4. Ownership and Boundaries
 
-## Responsibilities
+- **Ownership:** This module owns the Search concepts, the queries, the indexes, and the search results.
+- **Boundaries:** 
+  - Search discovers information; it NEVER owns information.
+  - Search indexes are derived artifacts.
+  - Search NEVER modifies Notes, Attachments, Tags, OCR Results, or Wiki Links.
 
-This module is responsible for:
+## 5. Dependencies
 
-- Accepting query input and routing it to the appropriate search backend (FTS5, sqlite-vec, or both)
-- Executing FTS5 queries against `fts_notes` and `fts_attachments` virtual tables
-- Embedding the user's query text using the active embedding model
-- Executing nearest-neighbor queries against `vec_embeddings`
-- Merging, deduplicating, and ranking results from both backends in hybrid mode
-- Resolving result entity references to displayable metadata (note title, attachment filename)
-- Generating highlighted snippets for keyword search results
-- Excluding soft-deleted content from all result sets
+The Search module is a top-level consumer. It depends on virtually every domain module to supply indexable content:
+- **Notes Module:** Text payloads.
+- **Attachments Module:** Metadata and file names.
+- **OCR Module:** Extracted text from images.
+- **Tags Module:** Tag UUIDs and display names.
+- **Wiki Links Module:** Link structures and backlink graphs.
 
----
+## 6. Interfaces and Events
 
-## Planned Specification Documents
+### 6.1 Consumed Interfaces
+- Provides an API/interface for the UI and other modules to submit search queries and trigger manual reindexes.
 
-| File | Status | Content |
-|---|---|---|
-| `01-KeywordSearch.md` | Planned | FTS5 query flow, tokenization, boolean operators, phrase matching, snippets, ranking |
-| `02-SemanticSearch.md` | Planned | Query embedding, nearest-neighbor retrieval, staleness behavior, result scoring |
-| `03-HybridSearch.md` | Planned | Result merging strategy, score normalization, deduplication, final ranking |
-| `04-SearchResultDisplay.md` | Planned | Result item format, excerpt display, navigation, type filtering |
-| `05-SearchIndexedContent.md` | Planned | Complete inventory of what content is and is not indexed for each search mode |
+### 6.2 Published Events
+- `SearchIndexUpdated`
+- `SearchReindexStarted`
+- `SearchReindexCompleted`
+- `SearchReindexFailed`
 
----
+### 6.3 Consumed Events
+- `NoteSaved` / `NotePermanentDeleted`
+- `AttachmentCreated` / `AttachmentUpdated` / `AttachmentDeleted`
+- `OCRCompleted` / `OCRResultsUpdated`
+- `TagAssigned` / `TagRemoved` / `TagRenamed`
+- `WikiLinkCreated` / `WikiLinkRemoved`
 
-## Key Business Rules (Summary)
+## 7. Extension Points
 
-- All search results are scoped to the active Workspace by construction — there is no Workspace filter that can be bypassed.
-- Soft-deleted notes and attachments are excluded from all search results.
-- The FTS5 keyword search operates entirely offline and requires no AI model.
-- Semantic search requires the Ollama embedding model to be available to embed the query. If Ollama is unavailable, semantic search degrades gracefully to keyword-only results with a user-visible warning.
-- Hybrid search deduplicates results by entity UUID — a note that appears in both FTS5 and vector results is returned once, with a combined score.
-- FTS5 phrase matching is supported using quoted terms: `"exact phrase"`.
-- FTS5 boolean operators (AND, OR, NOT) are supported per the SQLite FTS5 query syntax.
+- AI Semantic Search (Embeddings).
+- Natural Language Query Parsing.
+- Advanced Query Syntax (e.g., boolean operators, regex).
+- Federated Search (searching external providers like Google Drive).
 
----
+## 8. Settings
 
-## Requirements Traced
+- Reindex triggers (automatic vs manual).
+- Index freshness thresholds (how long to wait before batching updates).
 
-| Requirement | Description |
-|---|---|
-| FR-FTS-01 | Full-text search interface accessible from anywhere |
-| FR-FTS-02 | Index note titles, body content, OCR text |
-| FR-FTS-03 | Results ranked by relevance |
-| FR-FTS-04 | Phrase matching with quotes |
-| FR-FTS-05 | Boolean operators (AND, OR, NOT) |
-| FR-FTS-06 | Highlighted snippet in results |
-| FR-FTS-07 | Search scoped to active Workspace |
-| FR-FTS-08 | Full-text search operates offline |
-| FR-SEM-01 | Generate vector embeddings for notes and attachment text |
-| FR-SEM-04 | Semantic search with natural language queries |
-| FR-SEM-05 | Results ranked by vector similarity |
-| FR-SEM-07 | Semantic search Workspace-scoped |
-| FR-SEM-08 | Semantic search operates offline |
+## 9. Business Rules
 
----
+- **Ownership:** Search owns its derived indexes, but nothing else.
+- **Consumer:** Search strictly consumes data from other modules.
+- **Non-Destructive:** Search NEVER modifies canonical data like Notes.
+- **Derived Artifacts:** Search indexes are inherently derived. They can be deleted and entirely rebuilt at any time.
+- **Safe Failures:** A failure in the Search module (e.g., corrupted index) MUST NOT corrupt any canonical data or prevent the user from editing Notes.
 
-## Future Considerations
+## 10. Acceptance Criteria
 
-- **Search filters panel:** A sidebar panel for filtering results by date range, tags, folders, and content type simultaneously.
-- **Search operators for metadata:** Searching by `tag:work`, `folder:Projects`, `type:attachment`, `before:2024-01-01` directly from the search input.
-- **Saved searches:** Persisting a search query as a "smart folder" that dynamically shows matching notes.
-- **Search result caching:** Caching recent search results for instant re-display while the full search executes in the background.
+- When a user types a word into a Note, the Search index eventually updates in the background, making the word discoverable without altering the Note's original Markdown payload.
+- Deleting the entire search index database file does not result in the loss of a single Note; the system gracefully falls back to queuing a full Reindex.
+
+## 12. Cross References
+
+- [01-SearchOverview.md](./01-SearchOverview.md)
+- [02-SearchLifecycle.md](./02-SearchLifecycle.md)
+- [03-SearchIndexing.md](./03-SearchIndexing.md)
+- [04-SearchQueries.md](./04-SearchQueries.md)
+- [05-SearchFilters.md](./05-SearchFilters.md)
+- [06-SearchDiscovery.md](./06-SearchDiscovery.md)
+- [07-SearchResults.md](./07-SearchResults.md)
+- [08-SearchRanking.md](./08-SearchRanking.md)
+- [09-SearchPerformance.md](./09-SearchPerformance.md)
+- [10-SearchEvents.md](./10-SearchEvents.md)
+- [11-ExtensionPoints.md](./11-ExtensionPoints.md)
+- [12-SearchGovernance.md](./12-SearchGovernance.md)
