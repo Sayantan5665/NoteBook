@@ -16,6 +16,11 @@ This document defines the core concept of a Wiki Link within the Notebook applic
 
 A Wiki Link is a directed relationship from a Source Note to a Target Note. It empowers users to weave disparate thoughts into a connected network of knowledge.
 
+### 2.1 Relationship Philosophy
+Wiki Links describe conceptual knowledge relationships.
+- Wiki Links do **NOT** imply Folder hierarchy, Parent/child ownership, Dependency graphs, Access permissions, or Storage location.
+- Wiki Links remain completely independent of the Folder module. The relationship represents conceptual knowledge only.
+
 ## 3. Ownership
 
 - The **Wiki Links module** owns the graph registry and validation of the links.
@@ -43,7 +48,21 @@ A Wiki Link is a directed relationship from a Source Note to a Target Note. It e
 - **Link Display Names:** The UI presents the current title of the Target Note.
 - **Aliases (Future):** Users may define an alias (e.g., `[[UUID|Custom Display Text]]`) to override the display name while maintaining the UUID link.
 
-## 7. Mermaid Diagrams
+## 7. Link Topologies
+
+### 7.1 Self Links
+- A Note may safely reference itself.
+- Self links are valid relationships and do not require special handling. They participate in validation like any other Wiki Link.
+
+### 7.2 Circular Links
+- Circular relationships (e.g., A &rarr; B &rarr; A) are entirely valid.
+- Circular links are not considered errors. The Wiki Links module stores relationships without enforcing directional restrictions or acyclic graph rules.
+
+### 7.3 Orphan Notes
+- **Definition:** Notes with no incoming links, no outgoing links, or neither.
+- **Rule:** Orphan Notes are valid Notebook Notes. They remain fully functional and participate in Search, AI, Backup, and Synchronization like any other Note.
+
+## 8. Mermaid Diagrams
 
 ```mermaid
 graph LR
@@ -63,7 +82,7 @@ graph LR
     Edge -. points to .-> Note
 ```
 
-## 8. Acceptance Criteria
+## 9. Acceptance Criteria
 
 - Creating a link `[[Project Alpha]]` correctly binds to the UUID of the "Project Alpha" Note.
 - Renaming "Project Alpha" to "Project Beta" does not break the link; clicking it still navigates to the correct Note.

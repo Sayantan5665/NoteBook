@@ -37,6 +37,7 @@ If Note A contains a Wiki Link to Note B, then Note B automatically possesses a 
 
 - **Asymmetric Persistence:** Forward links are persisted as part of the Note content; Backlinks are NOT persisted in the Target Note's content. They reside in a relational index or graph database layer.
 - **Instant Updating:** When a forward link is removed, the corresponding Backlink must be immediately removed from the graph index.
+- **Duplicate Links:** A Note may contain multiple references to the same target Note. Multiple references remain valid. Backlinks represent the *existence* of a relationship rather than duplicating identical relationship entries. The presentation of duplicate backlinks is implementation dependent.
 
 ## 7. Acceptance Criteria
 

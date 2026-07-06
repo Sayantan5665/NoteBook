@@ -33,7 +33,17 @@ This document outlines the principles and workflows for validating Wiki Links. V
 ### 3.4 Future External Links
 - Cross-workspace or cross-domain links. Validation mechanisms for these will differ (e.g., HTTP status checks).
 
-## 4. Validation Workflow
+## 4. Link Resolution Philosophy
+
+Validation involves resolving a link to its ultimate target. The conceptual resolution order is:
+`Immutable Note UUID` &rarr; `Future Alias` &rarr; `Display Name`
+
+- **Authoritative Identifier:** The UUID remains the absolute and authoritative identifier for the relationship.
+- **Future Extension Points:** Aliases are resolved secondarily to customize presentation.
+- **Presentation Layer:** Display names are resolved last, purely for UI rendering.
+- **Relationship Integrity:** Link resolution must ALWAYS preserve relationship integrity by prioritizing the UUID above any textual representation.
+
+## 5. Validation Workflow
 
 1. A Note is saved, or a bulk validation job runs.
 2. The Wiki Links module extracts all UUIDs referenced in the Note's payload.
