@@ -1,108 +1,92 @@
+> **Document Type:** Module Specification
+> **Status:** Draft
+> **Version:** 1.0
+> **Depends On:** Notes Module
+> **Document Owner:** Core Architecture Team
+
 # Attachments Module
 
-> **Document Type:** Module README
-> **Module:** attachments
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §6](../../00-overview/04-FunctionalRequirements.md) · [../../00-overview/04-FunctionalRequirements.md §7](../../00-overview/04-FunctionalRequirements.md) · [../../02-database/04-Schema.md §3.3](../../02-database/04-Schema.md) · [../../02-database/11-EntityLifecycle.md §5](../../02-database/11-EntityLifecycle.md) · [../../02-database/03-ERD.md](../../02-database/03-ERD.md) · [../notes/README.md](../notes/README.md) · [../search/README.md](../search/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
-
 ---
 
-## Purpose
+## 1. Purpose
 
-The Attachments module defines how binary files are attached to notes, stored, processed, previewed, and deleted within a Workspace.
+The Attachments module manages all binary assets and files associated with Notes in the Notebook application. It ensures files are tracked, validated, and served efficiently without polluting the core Note domain with binary data.
 
-Attachments are first-class entities in Notebook, not embedded blobs inside notes. A file attached to a note is stored as a named file within the Workspace `attachments/` directory. Its metadata — filename, size, MIME type, OCR status, embedding status — is stored in the `attachments` table. The note references the attachment; the attachment is independent.
+## 2. Scope
 
-Beyond simple storage, this module covers OCR processing: when an image or scanned PDF is attached, the application automatically extracts text using Tesseract.js. This OCR text is then indexed for full-text search and semantic embedding.
+**This document covers:**
+- Attachment identity, lifecycle, and metadata.
+- Relationships between Notes and Attachments.
+- Event models and validation philosophy.
 
----
+**This document does NOT cover:**
+- Storage layer implementations (e.g., local filesystem, AWS S3).
+- Rich text rendering or Editor behavior.
+- OCR or AI processing implementations.
+- Search indexing.
 
-## Scope
+## 3. Responsibilities
 
-**This module covers:**
-- Attaching files to a note (drag-and-drop, file picker)
-- Supported file types and validation
-- Storing files in `attachments/<uuid>.<ext>` on the filesystem
-- Creating attachment metadata records in the database
-- Displaying the attachment list for a note
-- Opening and previewing attachments (inline images, PDF preview)
-- Downloading the original file
-- Renaming attachments (display name only — filesystem UUID name is immutable)
-- OCR processing: automatic trigger, status tracking, and result storage
-- Text extraction from non-image document types (DOCX, PDF text layer, Markdown, plain text)
-- Soft-deleting attachments (moving to Trash)
-- Restoring attachments from Trash
-- Permanently deleting attachments (removing file and cache artifacts from the filesystem)
+- **Identity Management:** Issuing and tracking immutable UUIDs for binary assets.
+- **Metadata Management:** Tracking file types, sizes, checksums, and original names.
+- **Lifecycle Tracking:** Ensuring files are safely attached, detached, and eventually garbage-collected.
 
-**This module does NOT cover:**
-- FTS5 indexing mechanics (see `search/`)
-- Embedding generation mechanics (see `ai/`)
-- Tag assignment to attachments (see `tags/`)
-- Attachment inclusion in sync (see `sync/`)
-- Attachment inclusion in backup (see `backup/`)
+## 4. Ownership and Boundaries
 
----
+- **Ownership:** This module owns the Attachment domain completely.
+- **Boundaries:** Notes reference Attachments. Attachments NEVER own Notes. Binary content is conceptually and physically independent from the Note's text payload.
 
-## Responsibilities
+## 5. Dependencies
 
-This module is responsible for:
+- **Notes Module:** The Attachments module must observe Note lifecycles to understand when an attachment is orphaned.
+- **Storage Subsystem:** (Conceptual) The module relies on an underlying persistence mechanism to read/write bytes, though it abstracts this from the rest of the application.
 
-- Validating attachment file type and size against configured limits
-- Copying the uploaded file into `attachments/<uuid>.<ext>` atomically
-- Creating the `attachments` table row with correct initial status fields
-- Emitting `AttachmentAddedEvent` to trigger OCR and embedding pipelines
-- Tracking `ocr_status` through its lifecycle (pending → processing → completed/failed)
-- Storing OCR-extracted text in `cache/ocr/<uuid>.txt`
-- Updating `fts_attachments` when OCR completes (in the same transaction as `ocr_status` update)
-- Generating attachment thumbnails for image types and storing in `cache/thumbnails/`
-- Cleaning up filesystem artifacts (attachment file, OCR cache, thumbnails) on permanent deletion
+## 6. Interfaces and Events
 
----
+### 6.1 Consumed Interfaces
+- None directly. The module provides interfaces to the Editor/Notes modules.
 
-## Planned Specification Documents
+### 6.2 Published Events
+- `AttachmentCreated`
+- `AttachmentAttached`
+- `AttachmentDetached`
+- `AttachmentUpdated`
+- `AttachmentDeleted`
+- `AttachmentRestored`
+- `AttachmentValidationFailed`
 
-| File | Status | Content |
-|---|---|---|
-| `01-AttachmentLifecycle.md` | Planned | Add, display, rename, soft-delete, restore, permanent delete workflows |
-| `02-OCRProcessing.md` | Planned | OCR trigger, status machine, Tesseract integration, result storage |
-| `03-TextExtraction.md` | Planned | Text extraction from DOCX, PDF, Markdown, plain text for FTS and embedding |
-| `04-AttachmentPreview.md` | Planned | Image preview, PDF viewer, file type handling, download behavior |
-| `05-SupportedFileTypes.md` | Planned | Allowed MIME types, file size limits, and type-specific processing rules |
+### 6.3 Consumed Events
+- `NoteTrashed` / `NotePermanentDeleted` (Triggers reference checks for orphan detection)
+- `NoteSaved` (May trigger `AttachmentAttached` if a new reference is found)
 
----
+## 7. Extension Points
 
-## Key Business Rules (Summary)
+- OCR processing.
+- Thumbnail generation and Media Previews.
+- External Storage Providers (e.g., Google Drive integration).
 
-- Attachment binary files are never stored inside the database — only in `attachments/` on the filesystem.
-- The attachment UUID is the filesystem filename — it never changes, even if the user renames the display name.
-- OCR is automatically triggered on attachment add for supported types; it cannot be suppressed by the user but may be manually re-triggered.
-- A soft-deleted attachment's file is retained on the filesystem until permanent deletion.
-- Permanent deletion of an attachment removes: the database row, `attachments/<uuid>.*`, `cache/ocr/<uuid>.txt`, `cache/thumbnails/<uuid>-*`, and `vec_embeddings` row.
-- Attachment processing is always performed locally — no cloud OCR or cloud parsing service is used.
+## 8. Settings
 
----
+- `AutoCleanOrphans`: Whether to automatically delete unreferenced attachments or keep them indefinitely.
+- `MaxFileSize`: Configurable constraints on asset ingestion.
 
-## Requirements Traced
+## 9. Business Rules
 
-| Requirement | Description |
-|---|---|
-| FR-AT-01 | Attach one or more files to a note |
-| FR-AT-02 | Supported types: PDF, JPEG, PNG, GIF, WebP, .txt, .docx, .xlsx, .csv |
-| FR-AT-03 | Files stored within the Workspace directory |
-| FR-AT-04 | Display list of attachments for a note |
-| FR-AT-05 | Open, download, rename, delete attachments |
-| FR-AT-06 | Inline image preview |
-| FR-AT-07 | Deleting an attachment moves it to Trash |
-| FR-AT-08 | Extract and index text from plain text, Word, spreadsheet attachments |
-| FR-OCR-01 through FR-OCR-08 | Full OCR lifecycle |
+- **Immutable Identity:** Attachments are issued a UUID at creation which never changes.
+- **Referential Integrity:** Notes reference Attachments via their UUIDs.
+- **Independent Binary:** The binary content is managed entirely separately from the Note payload.
+- **N:M Relationship (Future):** Multiple Notes may eventually reference the exact same Attachment UUID.
 
----
+## 10. Acceptance Criteria
 
-## Future Considerations
+- An image dropped into the Editor results in a distinct Attachment UUID managed by this module, with the Note holding only the reference string.
+- Deleting the text reference in the Note does not immediately destroy the binary asset.
 
-- **Attachment versioning:** Allow updating an attached file while retaining the previous version, mirroring note version history.
-- **Attachment deduplication:** Detect when the same file (by checksum) is attached multiple times and share the physical file while maintaining separate metadata records.
-- **Video and audio attachments:** Support for video/audio preview and, optionally, speech-to-text transcription via a plugin.
-- **Attachment cross-note referencing:** Display all notes that reference a given attachment (reverse lookup), similar to backlinks for notes.
+## 11. Cross References
+
+- [01-AttachmentOverview.md](./01-AttachmentOverview.md)
+- [02-AttachmentLifecycle.md](./02-AttachmentLifecycle.md)
+- [03-AttachmentMetadata.md](./03-AttachmentMetadata.md)
+- [04-AttachmentValidation.md](./04-AttachmentValidation.md)
+- [05-AttachmentEvents.md](./05-AttachmentEvents.md)
+- [06-ExtensionPoints.md](./06-ExtensionPoints.md)
