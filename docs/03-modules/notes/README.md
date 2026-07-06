@@ -97,9 +97,23 @@ Examples of derived artifacts:
 - AI Context
 - OCR Results
 
-**Principle:** Derived artifacts can always be regenerated from the source. The canonical Note remains authoritative at all times.
+**Principle:** Derived artifacts can always be regenerated from the source. The Canonical Note remains authoritative at all times.
 
-## 13. Business Rules
+## 13. Note Capabilities
+
+The Note entity exposes several capabilities to the broader system:
+- Can be **searched** (Full Text Search)
+- Can be **indexed** (for tags, metadata)
+- Can generate **AI embeddings** (for semantic retrieval)
+- Can be **exported** (to PDF, Markdown)
+- Can be **synchronized** (across devices)
+- Can be **backed up**
+- Can participate in **Wiki Links**
+- Can contain **attachments**
+
+**Clarification:** These are capabilities *available* to other modules. They are NOT responsibilities owned by the Notes module itself. The Notes module remains exclusively responsible only for the core Note domain payload and lifecycle.
+
+## 14. Business Rules
 
 - **Workspace Bound:** Every Note belongs to exactly one Workspace.
 - **Folder Bound:** Every Note belongs to exactly one Folder.
@@ -110,13 +124,13 @@ Examples of derived artifacts:
 - **Import Normalization:** Imported Notes become native Notes after successful import.
 - Decoupling: Notes never depend on Search, AI, or Synchronization.
 
-## 14. Acceptance Criteria
+## 15. Acceptance Criteria
 
 - A Note can be created, updated, and queried independently of the Editor.
 - A Note maintains its identity across multiple renames and folder moves.
 - Deleting a Note broadcasts the correct event for other modules (like Search) to clean up.
 
-## 15. Cross References
+## 16. Cross References
 
 - [01-NoteLifecycle.md](./01-NoteLifecycle.md)
 - [02-NoteContent.md](./02-NoteContent.md)
@@ -124,3 +138,13 @@ Examples of derived artifacts:
 - [04-NoteIdentity.md](./04-NoteIdentity.md)
 - [05-NoteStates.md](./05-NoteStates.md)
 - [06-NoteRelationships.md](./06-NoteRelationships.md)
+- [07-EditingSession.md](./07-EditingSession.md)
+- [08-Autosave.md](./08-Autosave.md)
+- [09-VersionHistory.md](./09-VersionHistory.md)
+- [10-Recovery.md](./10-Recovery.md)
+- [11-NoteEvents.md](./11-NoteEvents.md)
+- [12-Templates.md](./12-Templates.md)
+- [13-FavoritesAndPinning.md](./13-FavoritesAndPinning.md)
+- [14-ArchiveAndTrash.md](./14-ArchiveAndTrash.md)
+- [15-ImportExportBehaviour.md](./15-ImportExportBehaviour.md)
+- [16-ExtensionPoints.md](./16-ExtensionPoints.md)
