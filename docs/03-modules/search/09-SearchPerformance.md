@@ -42,7 +42,7 @@ Performance optimizations exist to make discovery instantaneous. However, optimi
 
 ### 4.2 Recovery and Rebuild Philosophy
 - **Disposable Artifacts:** Because search indexes are strictly derived, the ultimate recovery strategy for a corrupted index is simply to delete it and invoke a Full Rebuild.
-- **Safe Failures:** Search failures (e.g., an Out of Memory error during indexing) never corrupt Notebook data. The canonical Notes remain safe on the filesystem.
+- **Safe Failures:** Search failures (e.g., an Out of Memory error during indexing) affect ONLY discovery. They never corrupt Notebook data (Notes, Attachments, OCR Results, Tags, Wiki Links, or Editor content). The canonical source remains perfectly safe on the filesystem.
 
 ## 5. Business Rules
 

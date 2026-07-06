@@ -42,7 +42,29 @@ The Search module provides powerful, centralized discovery capabilities across t
   - Search indexes are derived artifacts.
   - Search NEVER modifies Notes, Attachments, Tags, OCR Results, or Wiki Links.
 
-## 5. Dependencies
+### 4.1 Canonical Discovery Flow
+A conceptual workflow illustrating Search's role within the Notebook:
+
+`Note` / `Attachment` / `OCR` &rarr; `Search Index` &rarr; `Search Query` &rarr; `Ranking` &rarr; `Search Results` &rarr; `AI / Retrieval`
+
+- Search consumes information from producer modules.
+- Search indexes are derived artifacts.
+- Search Results reference Notebook entities.
+- AI consumes Search outputs.
+- Ownership boundaries remain perfectly unchanged throughout the flow.
+
+## 5. Search Capabilities
+Search exposes capabilities consumed by other modules. They are NOT responsibilities owned by the Search module itself.
+Search can support:
+- Global Search
+- Quick Open
+- Command Palette
+- Related Notes
+- AI Retrieval
+- Workspace Search
+- Future Saved Searches
+
+## 6. Dependencies
 
 The Search module is a top-level consumer. It depends on virtually every domain module to supply indexable content:
 - **Notes Module:** Text payloads.
@@ -51,37 +73,37 @@ The Search module is a top-level consumer. It depends on virtually every domain 
 - **Tags Module:** Tag UUIDs and display names.
 - **Wiki Links Module:** Link structures and backlink graphs.
 
-## 6. Interfaces and Events
+## 7. Interfaces and Events
 
-### 6.1 Consumed Interfaces
+### 7.1 Consumed Interfaces
 - Provides an API/interface for the UI and other modules to submit search queries and trigger manual reindexes.
 
-### 6.2 Published Events
+### 7.2 Published Events
 - `SearchIndexUpdated`
 - `SearchReindexStarted`
 - `SearchReindexCompleted`
 - `SearchReindexFailed`
 
-### 6.3 Consumed Events
+### 7.3 Consumed Events
 - `NoteSaved` / `NotePermanentDeleted`
 - `AttachmentCreated` / `AttachmentUpdated` / `AttachmentDeleted`
 - `OCRCompleted` / `OCRResultsUpdated`
 - `TagAssigned` / `TagRemoved` / `TagRenamed`
 - `WikiLinkCreated` / `WikiLinkRemoved`
 
-## 7. Extension Points
+## 8. Extension Points
 
 - AI Semantic Search (Embeddings).
 - Natural Language Query Parsing.
 - Advanced Query Syntax (e.g., boolean operators, regex).
 - Federated Search (searching external providers like Google Drive).
 
-## 8. Settings
+## 9. Settings
 
 - Reindex triggers (automatic vs manual).
 - Index freshness thresholds (how long to wait before batching updates).
 
-## 9. Business Rules
+## 10. Business Rules
 
 - **Ownership:** Search owns its derived indexes, but nothing else.
 - **Consumer:** Search strictly consumes data from other modules.
@@ -89,7 +111,7 @@ The Search module is a top-level consumer. It depends on virtually every domain 
 - **Derived Artifacts:** Search indexes are inherently derived. They can be deleted and entirely rebuilt at any time.
 - **Safe Failures:** A failure in the Search module (e.g., corrupted index) MUST NOT corrupt any canonical data or prevent the user from editing Notes.
 
-## 10. Acceptance Criteria
+## 11. Acceptance Criteria
 
 - When a user types a word into a Note, the Search index eventually updates in the background, making the word discoverable without altering the Note's original Markdown payload.
 - Deleting the entire search index database file does not result in the loss of a single Note; the system gracefully falls back to queuing a full Reindex.

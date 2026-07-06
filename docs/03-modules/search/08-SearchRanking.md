@@ -16,9 +16,13 @@ This document outlines the conceptual philosophy of Ranking within the Search mo
 
 Ranking determines the presentation order of Search Results. It ensures the user sees the most conceptually relevant information at the top of the list.
 
-### 2.1 Relevance Concepts
-- Relevance is a calculated score determining how closely a document matches the user's intent.
+### 2.1 Relevance Philosophy
+- Relevance is highly contextual and determines how closely a document matches the user's intent.
 - It conceptually weighs factors like term frequency, exact phrase matching, and proximity of keywords.
+- Relevance may evolve over time as ranking algorithms improve.
+- Ranking criteria may expand as the Notebook ecosystem evolves (e.g., adding metadata fields).
+- Future semantic ranking must remain fully backward compatible with core full-text ranking.
+- **Rule:** Ranking affects presentation order ONLY. It never modifies Notebook content.
 
 ### 2.2 Ranking Consistency & Stability
 - Given the exact same search index and the exact same query, the ranking order must be deterministic and stable.

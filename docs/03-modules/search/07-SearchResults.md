@@ -22,6 +22,11 @@ This document defines the conceptual structure of Search Results. It clarifies t
 - Search Results are entirely derived from the search index at the moment of execution.
 - **Rule:** Search Results are derived objects. They NEVER become canonical data.
 
+### 2.3 Search Result Stability
+- Running the exact same query multiple times may legitimately produce different result ordering if the underlying indexed content changes between executions.
+- Changes to ranking algorithms may also shift result ordering.
+- These shifts do not modify canonical Notebook content. Result ordering remains strictly a presentation concern.
+
 ## 3. Result Presentation Concepts
 
 ### 3.1 Result Grouping

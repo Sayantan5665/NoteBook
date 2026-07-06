@@ -51,6 +51,7 @@ The Search module strictly does **NOT** own:
 ## 5. Business Rules
 
 - **Absolute Data Safety:** Because Search indexes are derived, the ultimate fallback for any unrecoverable error is to delete the index and rebuild it from the canonical source modules.
+- **Search Failure Philosophy:** Search failures affect ONLY discovery. They must never corrupt Notes, Attachments, OCR Results, Tags, Wiki Links, or Editor content. Search validation reports failures while strictly preserving overall Notebook integrity.
 - **Boundary Preservation:** Search ownership boundaries must remain stable regardless of technological advancements. AI may augment Search, but it does not shift the boundary of canonical data ownership.
 
 ## 6. Acceptance Criteria
