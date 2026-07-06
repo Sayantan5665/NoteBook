@@ -35,7 +35,29 @@ This document details the specific operations available for managing Workspaces.
 
 ---
 
-## 3. Workflows
+## 3. Core Concepts
+
+### 3.1 Recent Workspaces
+
+"Recent Workspaces" is NOT owned by the Workspace module.
+- It is Application-level state.
+- It belongs to the Application module rather than an individual Workspace.
+- A Workspace should have no knowledge of whether it is listed in Recent Workspaces.
+- The Application is responsible for maintaining the Recent Workspaces list.
+- The Workspace module only exposes information required by the Application.
+
+### 3.2 Workspace Identity
+
+A Workspace consists of three independent identifiers:
+- **Workspace UUID:** This is the permanent identity and is immutable. Synchronization, backups, imports and exports use the Workspace UUID rather than the folder name.
+- **Workspace Name:** May change over time.
+- **Workspace Directory:** May change over time.
+
+Renaming or moving a Workspace never changes its identity. For example, moving a Workspace from `C:\Notes\Personal` to `D:\Backups\Personal` or renaming it to "My Personal Notes" leaves the Workspace UUID unchanged.
+
+---
+
+## 4. Workflows
 
 ### 3.1 Create Workspace
 
@@ -117,9 +139,26 @@ This document details the specific operations available for managing Workspaces.
 5. System overwrites the `manifest.json` in the destination with the new UUID and appends "(Copy)" to the name.
 6. System adds the new Workspace to the Recent list.
 
+### 4.7 Move Workspace
+
+**Precondition:** Workspace is Disconnected (ideal).
+
+Moving a Workspace only changes its physical location.
+
+It does NOT:
+- Create a new Workspace
+- Change the UUID
+- Reset settings
+- Affect synchronization identity
+- Affect Version History
+
+**Validation Rules:**
+- **Before moving:** The destination directory must be valid, accessible, and not already contain a Workspace. The Workspace must not be actively open or locked.
+- **After moving:** The system must verify the `manifest.json` and `database.db` are readable at the new location before updating the Application's Recent Workspaces list to point to the new path.
+
 ---
 
-## 4. Business Rules & Validation
+## 5. Business Rules & Validation
 
 - **Directory Validation:** A Workspace must reside in a dedicated directory. The system shall refuse to initialize a Workspace in a root directory (e.g., `C:\`, `/`) or an already populated directory (unless it contains a valid `manifest.json`).
 - **Manifest Supremacy:** If a directory contains a `database.db` but no `manifest.json`, it is an invalid Workspace. Recovery workflows must be invoked.
@@ -127,7 +166,7 @@ This document details the specific operations available for managing Workspaces.
 
 ---
 
-## 5. UI Components
+## 6. UI Components
 
 | Component | Responsibility |
 |---|---|
@@ -137,7 +176,7 @@ This document details the specific operations available for managing Workspaces.
 
 ---
 
-## 6. Error Handling & Edge Cases
+## 7. Error Handling & Edge Cases
 
 | Edge Case | Expected Behavior |
 |---|---|
@@ -147,7 +186,7 @@ This document details the specific operations available for managing Workspaces.
 
 ---
 
-## 7. Acceptance Criteria
+## 8. Acceptance Criteria
 
 - [ ] Creating a Workspace successfully creates the manifest, database, and directories.
 - [ ] Renaming a Workspace updates the manifest and the UI immediately.

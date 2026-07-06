@@ -33,12 +33,18 @@ This document details the domain events published by the Workspace module. Since
 
 The Workspace module emits the following events. Other modules (like Sync, Backup, Settings, and AI) subscribe to these events.
 
-### 3.1 `WorkspaceCreated`
+These events are categorized into Domain Events and System Events.
+
+### 3.1 Domain Events
+
+Domain events represent business-level changes to the state or lifecycle of a Workspace.
+
+#### `WorkspaceCreated`
 - **Trigger:** A new Workspace directory, manifest, and database are successfully initialized.
 - **Payload:** `workspaceId`, `path`, `name`.
 - **Primary Consumers:** Launch Screen UI (to update recent list).
 
-### 3.2 `WorkspaceOpened`
+#### `WorkspaceOpened`
 - **Trigger:** A Workspace is successfully validated, migrated (if needed), and the Prisma connection is established. It is now the Active Workspace.
 - **Payload:** `workspaceId`, `path`, `name`, `schemaVersion`.
 - **Primary Consumers:** 
@@ -47,36 +53,70 @@ The Workspace module emits the following events. Other modules (like Sync, Backu
   - **Sync Module:** To check if a background sync is scheduled or if there are unresolved conflicts.
   - **Notifications Module:** To display any pending alerts for this Workspace.
 
-### 3.3 `WorkspaceClosed`
+#### `WorkspaceClosed`
 - **Trigger:** The Active Workspace is cleanly disconnected (due to app exit or switching).
 - **Payload:** `workspaceId`.
 - **Primary Consumers:**
   - **All Modules:** Must immediately halt background processing, cancel pending writes, and release memory caches associated with this Workspace.
 
-### 3.4 `WorkspaceRenamed`
+#### `WorkspaceRenamed`
 - **Trigger:** The user updates the Workspace name, and the manifest is successfully rewritten.
 - **Payload:** `workspaceId`, `newName`.
 - **Primary Consumers:** UI Shell (to update the window title and sidebar).
 
-### 3.5 `WorkspaceDeleted`
+#### `WorkspaceDeleted`
 - **Trigger:** A Workspace is permanently removed from the filesystem.
 - **Payload:** `workspaceId`.
 - **Primary Consumers:** Launch Screen UI (to remove from the recent list).
 
-### 3.6 `WorkspaceImported` / `WorkspaceExported`
-- **Trigger:** Successful completion of a full Workspace archive import or export.
-- **Payload:** `workspaceId`, `archivePath`.
-- **Primary Consumers:** Notifications Module (to display a success toast).
-
-### 3.7 `WorkspaceRecovered`
+#### `WorkspaceRecovered`
 - **Trigger:** A recovery workflow (e.g., database rebuild from backup) completes successfully.
 - **Payload:** `workspaceId`, `recoveryType`.
 - **Primary Consumers:** Notifications Module.
 
-### 3.8 `WorkspaceMigrationCompleted`
+### 3.2 System Events
+
+System events represent operational, background, or infrastructural processes occurring within the Workspace context.
+
+#### `WorkspaceMigrationStarted`
+- **Trigger:** The SQLite database migration process begins.
+- **Payload:** `workspaceId`, `oldVersion`.
+- **Primary Consumers:** UI Shell (to show progress).
+
+#### `WorkspaceMigrationCompleted`
 - **Trigger:** The SQLite database is successfully migrated to a new schema version during the Open workflow.
 - **Payload:** `workspaceId`, `oldVersion`, `newVersion`.
 - **Primary Consumers:** Notifications Module (to inform the user of the upgrade).
+
+#### `WorkspaceValidationStarted`
+- **Trigger:** Integrity checks begin on the Workspace files.
+- **Payload:** `workspaceId`.
+- **Primary Consumers:** UI Shell.
+
+#### `WorkspaceValidationCompleted`
+- **Trigger:** Integrity checks complete.
+- **Payload:** `workspaceId`, `results`.
+- **Primary Consumers:** UI Shell.
+
+#### `WorkspaceRepairStarted`
+- **Trigger:** Automated repair processes begin on corrupted data.
+- **Payload:** `workspaceId`.
+- **Primary Consumers:** UI Shell.
+
+#### `WorkspaceRepairCompleted`
+- **Trigger:** Automated repair processes finish.
+- **Payload:** `workspaceId`, `success`.
+- **Primary Consumers:** Notifications Module.
+
+#### `BackupStarted`
+- **Trigger:** A Workspace backup process begins.
+- **Payload:** `workspaceId`.
+- **Primary Consumers:** Backup Manager.
+
+#### `BackupCompleted`
+- **Trigger:** A Workspace backup process completes.
+- **Payload:** `workspaceId`, `backupPath`.
+- **Primary Consumers:** Notifications Module.
 
 ---
 

@@ -105,7 +105,32 @@ In the future, an "Archived" state may be introduced where a Workspace is compre
 
 ---
 
-## 7. Business Rules
+## 7. Workspace Locking
+
+**Design Principles:**
+- Prevent multiple Notebook instances from writing to the same Workspace simultaneously.
+- SQLite provides database-level locking natively.
+- The application should additionally maintain a lightweight Workspace lock mechanism to improve user experience.
+- Detect already-open Workspaces gracefully.
+
+**Expected Behavior:**
+- If a Workspace is already open, the application should warn the user and prevent opening it again in a new instance to avoid conflicts.
+- **Stale Lock Recovery:** After an unexpected crash, a stale lock may persist. The system should detect this (e.g., by checking if the process holding the lock is still alive) and offer a mechanism to recover and safely acquire the lock.
+
+---
+
+## 8. Workspace Health
+
+A Workspace can exist in one of several health states:
+
+- **Healthy:** The `manifest.json`, `database.db`, and all required directories are present, accessible, and valid.
+- **Warning:** Non-critical issues detected, such as missing caches or recoverable missing non-essential attachments. Action: Automatic validation opportunities should run in the background.
+- **Error:** Significant issues detected, such as an inaccessible `attachments` directory due to permissions, or a failed migration. Action: User intervention is required to restore permissions or fix paths.
+- **Corrupted:** Critical components are missing or unreadable, such as a missing `database.db` or malformed `manifest.json`. Action: Relationship with Workspace Recovery is triggered; user is prompted to restore from a backup or run a repair tool.
+
+---
+
+## 9. Business Rules
 
 - **Single Active Workspace:** Only one Workspace can be in the **Active** state per application window session.
 - **Identity Permanence:** A Workspace's identity is defined by the `id` field in its `manifest.json`. Moving the directory on the filesystem does not change its identity or state machine.
@@ -113,7 +138,7 @@ In the future, an "Archived" state may be introduced where a Workspace is compre
 
 ---
 
-## 8. Acceptance Criteria
+## 10. Acceptance Criteria
 
 - [ ] A Workspace can transition from Create -> Active -> Close -> Disconnected.
 - [ ] Deleting an Active workspace successfully closes connections before removing files.

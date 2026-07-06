@@ -82,7 +82,26 @@ This document defines how the Workspace module handles exceptional failure state
 
 ---
 
-## 5. UI Components
+## 5. Recovery Priority
+
+When performing full Workspace recovery or addressing widespread corruption, it is critical to recover data in the correct dependency order.
+
+**Recommended recovery order:**
+1. **Manifest** (Identity and schema definition)
+2. **Database** (Core structured data and relationships)
+3. **Attachments** (Binary user data referenced by the database)
+4. **Indexes** (Derived search data)
+5. **Caches** (Derived thumbnails, OCR text)
+
+**Why caches should always be rebuilt rather than restored:**
+Caches contain derivative data. Restoring caches from a backup introduces the risk of stale or mismatched data if the database or attachments have changed. Rebuilding caches from the restored authoritative data guarantees consistency and saves backup storage space.
+
+**Why user data always has higher priority than derived data:**
+Derived data (indexes, caches, embeddings) can always be regenerated computationally from the source material. User data (the database contents and attachment files) cannot be regenerated if lost. Therefore, recovery workflows must ensure user data is fully secured and validated before expending system resources on rebuilding derived state.
+
+---
+
+## 6. UI Components
 
 | Component | Responsibility |
 |---|---|
@@ -91,7 +110,7 @@ This document defines how the Workspace module handles exceptional failure state
 
 ---
 
-## 6. Acceptance Criteria
+## 7. Acceptance Criteria
 
 - [ ] A Workspace with a missing manifest can be successfully repaired and reopened.
 - [ ] A corrupted database triggers the Recovery Wizard, allowing restoration from the `backups/` directory.

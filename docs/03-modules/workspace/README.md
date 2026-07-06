@@ -47,8 +47,9 @@ This module is responsible for:
 - Writing and reading `manifest.json` as the Workspace identity and version record
 - Initializing and migrating the `database.db` for each Workspace
 - Managing the Prisma client connection lifecycle (one client per open Workspace)
-- Maintaining the recent Workspaces list in application-level storage
 - Detecting and handling incompatible Workspace versions (`schemaVersion` and `formatVersion` checks)
+
+*Note: The Workspace module does NOT own or maintain the Recent Workspaces list. Recent Workspaces is Application-level state and is maintained by the Application module. A Workspace has no knowledge of whether it is listed in Recent Workspaces. The Workspace module only exposes information required by the Application.*
 - Surfacing Workspace-level metadata to the UI (name, path, schema version, last opened)
 - Enforcing single-active-Workspace semantics within a session
 
@@ -111,7 +112,23 @@ The Workspace module does not typically consume domain events from other modules
 
 ## 10. Background Jobs
 
-- None. Workspace management operations are user-initiated and synchronous (or block the UI until completion).
+While Workspace management operations themselves are synchronous, the active Workspace acts as the orchestrator for module background services.
+
+The following background services are expected to **start** after a Workspace becomes active:
+- Search indexing
+- Embedding generation
+- OCR queue
+- Autosave
+- Synchronization monitoring
+- Plugin initialization
+
+The following background services must **stop** gracefully during Workspace shutdown before the database connection is closed:
+- Search indexing
+- Embedding generation
+- OCR queue
+- Autosave
+- Synchronization monitoring
+- Plugin execution
 
 ---
 
