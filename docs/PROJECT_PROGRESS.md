@@ -29,12 +29,23 @@ It is designed to help both human developers and AI coding agents quickly know:
 - **Overall Status:** In Progress
 - **Last Updated:** 2026-07-06
 
+**Current State Snapshot:**
+- ✔ Product Overview Complete
+- ✔ Governance Complete
+- ✔ Architecture Complete
+- ✔ Database Complete
+- ✔ Module Framework Complete
+- ✔ Workspace Module Frozen
+- ✔ Folder Module Frozen
+
+**Next Module:** Notes
+
 ---
 
 ## 3. Current Milestone
 
 - **Current Goal:** Complete and freeze all functional specifications for core modules.
-- **Next Goal:** AI Design and Plugin SDK specification.
+- **Next Goal:** Complete the Notes module specification.
 - **Upcoming Review:** Review of the Notes and Editor module specifications.
 - **Expected Deliverables:** Approved module specs for Workspace, Folder, Notes, Editor, Tags, and Attachments.
 

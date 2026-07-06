@@ -74,7 +74,7 @@ The documentation is organized into numbered directories to enforce reading orde
   - **When to reference:** Building third-party plugins or expanding the SDK.
 - **`06-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
-  - **Contents:** Build scripts, linting rules, PR templates.
+  - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
 - **`07-testing/`**
   - **Purpose:** Quality assurance strategy.
