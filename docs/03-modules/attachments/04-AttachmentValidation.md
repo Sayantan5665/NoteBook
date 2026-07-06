@@ -37,6 +37,11 @@ This document outlines the principles for validating Attachments. Validation pro
 
 ### 4.2 Missing Files
 - A "Missing File" occurs when the registry possesses metadata for a UUID, but the underlying storage subsystem cannot locate the binary asset.
+- **Identity Validity:** Even if the binary is missing, the Attachment identity (UUID) remains valid in the registry.
+- **Relationship Integrity:** Existing relationships (Note references) remain fully intact.
+- **Reporting:** Validation processes report the missing binary without destroying the metadata.
+- **Editor Degradation:** Editors encountering a missing binary should degrade gracefully (e.g., rendering a broken image icon) rather than failing to load the Note.
+- **Recovery:** Recovery mechanisms may restore the exact binary in the future, at which point the existing relationships will seamlessly resolve again.
 
 ### 4.3 Corrupted Files
 - A "Corrupted File" occurs when the registry possesses the file, but its current Checksum no longer matches the `Checksum` stored in metadata.

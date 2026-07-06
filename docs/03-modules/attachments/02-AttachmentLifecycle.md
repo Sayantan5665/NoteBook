@@ -24,7 +24,11 @@ This document outlines the lifecycle of an Attachment, detailing how it transiti
 - A Note removes its reference to the Attachment UUID (e.g., the user deletes the image block from the Editor).
 
 ### 2.4 Replace
-- A user updates an attachment (e.g., uploading a newer version of a PDF). Conceptually, the module creates a new Attachment UUID and updates the Note's reference, or handles internal versioning while keeping the UUID stable.
+- **Attachment Replacement Philosophy:** A user updates an attachment (e.g., uploading a newer version of a PDF).
+  - Replacement updates the referenced binary while preserving architectural consistency.
+  - Replacement should maintain relationship integrity (e.g., Notes referencing the Attachment do not break).
+  - Historical handling of the replaced binary belongs to future versioning capabilities.
+  - *Note:* The implementation strategy (whether to keep the UUID and bump a version, or mint a new UUID and update references) is not prescribed here.
 
 ### 2.5 Rename
 - Changing the `Display Name` or `Original File Name` metadata. This does NOT alter the underlying UUID or the file bytes.
@@ -45,22 +49,22 @@ This document outlines the lifecycle of an Attachment, detailing how it transiti
 - **Import:** The module ingests raw files from a ZIP archive, minting new UUIDs.
 - **Export:** The module resolves UUIDs back into raw files placed alongside the exported Markdown notes.
 
-## 3. Lifecycle Diagrams
+## 3. Lifecycle State Model
+
+The lifecycle represents conceptual Attachment state independent from Note lifecycle. Attachment state transitions preserve identity.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Created : Upload
-    Created --> Attached : Note References Asset
+    [*] --> Created
+    Created --> Attached
     
-    Attached --> Detached : Note Removes Reference
-    Attached --> Detached : Note is Trashed
+    Attached --> Detached
+    Detached --> Archived
+    Archived --> Deleted
+    Deleted --> Restored
+    Restored --> Attached
     
-    Detached --> Attached : Reference Restored
-    
-    Detached --> Deleted : Garbage Collection (Orphan)
-    Attached --> Deleted : Explicit User Deletion
-    
-    Deleted --> [*]
+    Detached --> Attached
 ```
 
 ## 4. Business Rules

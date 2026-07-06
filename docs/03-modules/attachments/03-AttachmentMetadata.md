@@ -38,21 +38,29 @@ This document defines the conceptual metadata tracked for every Attachment. Meta
 - **OCR Availability:** Boolean indicating if text has been successfully extracted from this image.
 - **AI Embedding Availability:** Boolean indicating if the document has been vectorized for semantic search.
 
-## 3. Business Rules
+## 3. Binary vs Metadata vs Relationship
+It is critical to distinguish three independent concepts within the Attachment domain:
+- **Binary Content:** Represents the actual file (the raw byte stream).
+- **Attachment Metadata:** Describes the Attachment (size, name, checksum, MIME type).
+- **Note Relationships:** Describes which Notes currently reference the Attachment UUID.
+
+*Clarification:* Each of these evolves independently while maintaining the exact same Attachment identity (UUID). For example, relationships can be added or removed, and metadata like `Display Name` can be updated, all without modifying the underlying Binary Content or the UUID.
+
+## 4. Business Rules
 
 - **Metadata Describes Attachments:** Metadata belongs strictly to the Attachment. It does not belong to the Note referencing it.
 - **Storage Agnostic:** Metadata MUST NOT include implementation-specific details like `s3_bucket_url` or `local_disk_path_c_drive`. The storage path must be resolved dynamically using the UUID.
 
-## 4. Validation
+## 5. Validation
 
 - The module must validate that the `Media Type` matches the actual binary signature of the file, rather than trusting the user-provided file extension (e.g., preventing a `.exe` masquerading as a `.jpg`).
 
-## 5. Future Enhancements
+## 6. Future Enhancements
 
 - **EXIF Data Extraction:** Automatically extracting location and camera data from uploaded photographs and storing it in a structured metadata sub-field.
 - **Custom User Metadata:** Allowing users to add their own tags or descriptions directly to the Attachment record.
 
-## 6. Acceptance Criteria
+## 7. Acceptance Criteria
 
 - Uploading a file correctly captures its byte size, computes a SHA-256 hash, and identifies its MIME type based on binary inspection.
 - The metadata schema contains no explicit references to the underlying physical storage technology.

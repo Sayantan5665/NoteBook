@@ -36,6 +36,16 @@ The Attachments module manages all binary assets and files associated with Notes
 - **Ownership:** This module owns the Attachment domain completely.
 - **Boundaries:** Notes reference Attachments. Attachments NEVER own Notes. Binary content is conceptually and physically independent from the Note's text payload.
 
+### 4.1 Canonical Attachment Flow
+A conceptual workflow describing how Attachments interact with the rest of the system:
+
+`Binary File` &rarr; `Attachment` &rarr; `Metadata` &rarr; `Attachment Reference` &rarr; `Note` &rarr; `Editor` &rarr; `Derived Artifacts` &rarr; `OCR / Search / AI`
+
+- The Attachment remains the canonical representation of the binary asset.
+- OCR, Search, and AI consume derived data.
+- Editors interact through Attachment references.
+- Ownership boundaries remain unchanged throughout the flow.
+
 ## 5. Dependencies
 
 - **Notes Module:** The Attachments module must observe Note lifecycles to understand when an attachment is orphaned.

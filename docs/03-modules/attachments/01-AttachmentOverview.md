@@ -29,9 +29,21 @@ An Attachment is a distinct, managed binary asset (e.g., an image, a PDF, a spre
 
 ## 5. Attachment Relationships and References
 
-- **References:** A Note's content payload (e.g., Markdown or JSON) contains a pointer to the Attachment UUID.
-- **N:1 Conceptual Model (Current):** Typically, an Attachment is uploaded for a specific Note.
-- **N:M Conceptual Model (Future):** Multiple Notes may reference the exact same Attachment UUID, avoiding duplicate uploads of the same binary file.
+### 5.1 Attachment Reference Philosophy
+- **Reference Model:** Notes reference Attachments using immutable Attachment UUIDs.
+- **Editor Interaction:** Editors work strictly with Attachment references rather than raw binary content.
+- **Ownership:** The binary content remains fully owned by the Attachments module, not the Note.
+- **Identity Distinction:** Attachment identity remains entirely independent from Note identity.
+- **Concept Distinction:**
+  - **Note:** The text payload containing references.
+  - **Attachment:** The actual managed binary asset and its metadata.
+  - **Attachment Reference:** The pointer (e.g., UUID string) embedded within the Note's text linking it to the Attachment.
+
+### 5.2 Shared Attachments (Future Capability)
+- **Shared References:** Multiple Notes may reference the exact same Attachment UUID.
+- **Ownership Unchanged:** Shared references do not change Attachment ownership.
+- **Reference Removal:** Removing one reference from a Note does not automatically remove the Attachment, as other Notes may still reference it.
+- **Relationship Management:** Relationship management (tracking which Notes link to which Attachments) remains the responsibility of the Attachments module.
 
 ## 6. Supported Categories
 
@@ -52,7 +64,18 @@ The module conceptually supports any file type, but categorizes them for downstr
 - **Immutability:** Once an Attachment is ingested and assigned a UUID, its core binary content cannot be mutated in place. Edits (like cropping an image) technically result in a new Attachment UUID or a new version layer depending on future implementations.
 - **Isolation:** The failure of an Attachment to load MUST NOT prevent the Note itself from loading.
 
-## 9. Acceptance Criteria
+## 9. Attachment Capabilities
+Attachments expose capabilities consumed by other modules. They are NOT responsibilities owned by the Attachments module.
+- Can generate previews.
+- Can generate thumbnails.
+- Can participate in OCR.
+- Can generate AI embeddings.
+- Can be synchronized.
+- Can be backed up.
+- Can be exported.
+- Can participate in search indexing.
+
+## 10. Acceptance Criteria
 
 - Uploading an image generates a distinct UUID for the image file.
 - The Note payload stores only `![alt text](attachment://UUID)`, completely isolating the text database from the binary blob.

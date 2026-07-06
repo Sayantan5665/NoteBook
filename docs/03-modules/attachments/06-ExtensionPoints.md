@@ -27,6 +27,12 @@ This document outlines the extensibility of the Attachments module. It scopes ho
 - **External Storage Providers:** Abstracting the storage layer so a plugin could map `Attachment UUID 123` to a file hosted in Google Drive or a private AWS S3 bucket, rather than local disk.
 - **Future Collaboration:** Handling concurrent upload conflicts or sync state management for large binary blobs.
 
+### 2.4 Derived Artifact Philosophy
+- **Concept:** Artifacts (e.g., Thumbnails, Previews, OCR Text, AI Embeddings, Cached Renderings) are mathematically or semantically derived from the Attachment.
+- **Canonical Source:** Derived artifacts are NEVER the canonical Attachment. The original binary remains the sole source of truth.
+- **Volatility:** Derived artifacts may be regenerated at any time.
+- **Independence:** The loss, deletion, or corruption of a derived artifact does not affect the core Attachment itself. The system simply regenerates it when needed.
+
 ## 3. Plugin Hooks
 
 - **Ingestion Pipeline Hooks:** Allowing plugins to intercept the `Create` lifecycle stage to perform custom validation (e.g., rejecting files over a specific size, or stripping EXIF data before save).
