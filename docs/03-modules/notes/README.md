@@ -71,7 +71,19 @@ The Notes module broadcasts its state changes to the system:
 
 - `DefaultNoteFolder`: An optional Workspace setting defining where new Notes are created if no Folder is specified.
 
-## 11. Canonical Note
+## 11. Persistence Philosophy
+
+The Notes module adheres to a strict conceptual flow of data persistence to maintain absolute integrity:
+
+`Runtime Memory` &rarr; `Editing Session` &rarr; `Persistence Layer` &rarr; `Canonical Note` &rarr; `Version History` &rarr; `Derived Artifacts`
+
+- **Runtime State:** Temporary, volatile memory. Runtime state (like an unsaved editing session) MUST NEVER become the authoritative source of truth.
+- **Canonical Note:** The single, definitive source of truth residing in the persistent database.
+- **Derived Artifacts:** Secondary outputs generated from the Canonical Note. 
+  - Examples: Search Index, AI Embeddings, Export Files, Cached Views, OCR Results.
+  - **Principle:** Derived artifacts can *always* be regenerated from the source. The Canonical Note remains authoritative at all times.
+
+## 12. Canonical Note
 
 The Note is the **single source of truth** (the Canonical Note).
 
@@ -87,7 +99,7 @@ Examples of derived artifacts:
 
 **Principle:** Derived artifacts can always be regenerated from the source. The canonical Note remains authoritative at all times.
 
-## 12. Business Rules
+## 13. Business Rules
 
 - **Workspace Bound:** Every Note belongs to exactly one Workspace.
 - **Folder Bound:** Every Note belongs to exactly one Folder.
@@ -96,15 +108,15 @@ Examples of derived artifacts:
 - **Content Separation:** Rich content and metadata are separate concepts. Metadata does not define identity.
 - **Explicit Deletion:** Permanent deletion requires explicit user confirmation.
 - **Import Normalization:** Imported Notes become native Notes after successful import.
-- **Decoupling:** Notes never depend on Search, AI, or Synchronization.
+- Decoupling: Notes never depend on Search, AI, or Synchronization.
 
-## 13. Acceptance Criteria
+## 14. Acceptance Criteria
 
 - A Note can be created, updated, and queried independently of the Editor.
 - A Note maintains its identity across multiple renames and folder moves.
 - Deleting a Note broadcasts the correct event for other modules (like Search) to clean up.
 
-## 14. Cross References
+## 15. Cross References
 
 - [01-NoteLifecycle.md](./01-NoteLifecycle.md)
 - [02-NoteContent.md](./02-NoteContent.md)
