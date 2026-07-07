@@ -37,6 +37,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ Module Framework Complete
 - ✔ Workspace Module Frozen
 - ✔ Folder Module Frozen
+- ✔ AI Module Frozen
 
 **Next Module:** Notes
 
@@ -91,7 +92,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 | **Attachments** | Pending | Pending | No |
 | **Tags** | Pending | Pending | No |
 | **Search** | Pending | Pending | No |
-| **AI** | Pending | Pending | No |
+| **AI** | Complete | Approved | Yes |
 | **Todos** | Pending | Pending | No |
 | **Synchronization** | Pending | Pending | No |
 | **Backup** | Pending | Pending | No |
@@ -132,6 +133,7 @@ The following documents have been approved and frozen. Frozen documents should o
 - `docs/02-database/*` (All Database Documents)
 - `docs/03-modules/workspace/*` (Workspace Module Specification)
 - `docs/03-modules/folder/*` (Folder Module Specification)
+- `docs/03-modules/ai/*` (AI Module Specification)
 - `docs/INDEX.md` (Project Index)
 
 ---

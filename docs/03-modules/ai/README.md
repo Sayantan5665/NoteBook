@@ -1,111 +1,152 @@
-# AI Module
+> **Document Type:** Module Specification
+> **Status:** Frozen
+> **Version:** 1.0
+> **Depends On:** Embeddings & Retrieval, Search, Notes, Attachments, OCR, Tags, Wiki Links
+> **Document Owner:** Core Architecture Team
 
-> **Document Type:** Module README
-> **Module:** ai
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §10](../../00-overview/04-FunctionalRequirements.md) · [../../00-overview/04-FunctionalRequirements.md §9](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/13-AIArchitecture.md](../../01-architecture/13-AIArchitecture.md) · [../../02-database/06-sqlite-vec.md](../../02-database/06-sqlite-vec.md) · [../../02-database/04-Schema.md §3.9](../../02-database/04-Schema.md) · [../search/README.md](../search/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
-
----
-
-## Purpose
-
-The AI module defines the behavior of Notebook's local AI capabilities: the AI chat interface, the RAG (Retrieval-Augmented Generation) pipeline, embedding generation, and the context assembly process.
-
-Notebook's AI is local-first and offline-capable. The default provider is Ollama, running entirely on the user's machine. No user data — no note content, no queries, no chat history — is sent to any remote service unless the user explicitly configures a remote provider via the plugin system.
-
-The AI module transforms the user's note collection into a queryable knowledge base: ask a question, retrieve the most relevant notes, generate a grounded answer, and cite the sources.
+# AI Assistant / RAG Module
 
 ---
 
-## Scope
+## 1. Purpose
 
-**This module covers:**
-- AI chat: creating sessions, sending messages, receiving streamed responses
-- RAG pipeline: query embedding → vector retrieval → context assembly → LLM inference → response with citations
-- Embedding generation: triggering, queuing, storing, and invalidating embeddings for notes and attachments
-- Embedding granularity: chunk-level embedding strategy
-- Model selection: choosing and changing the Ollama chat model and embedding model
-- Context building: selecting and preparing retrieved content for the LLM prompt
-- Citation: identifying and linking the source notes used in a response
-- Chat history: persisting conversations within the Workspace
-- Re-indexing: triggering and tracking full Workspace re-embedding
+The AI Assistant module is the user-facing intelligence layer of the Notebook ecosystem. It orchestrates Retrieval-Augmented Generation (RAG) workflows — consuming grounded semantic context from the Embeddings & Retrieval module and Search — to produce AI Responses that are relevant to the user's actual Notebook content, without inventing or modifying it.
 
-**This module does NOT cover:**
-- Semantic search UX (see `search/`)
-- Attachment OCR (see `attachments/`)
-- Plugin-contributed AI providers (see `plugins/`)
-- Settings UI for model selection (see `settings/`)
+## 2. Scope
 
----
+**This document covers:**
+- AI Conversation and Chat Session concepts and lifecycle.
+- The module's ownership and boundary definitions.
+- Event models for AI request and response flows.
+- Extension points for future AI providers and capabilities.
 
-## Responsibilities
+**This document does NOT cover:**
+- Specific LLM implementations or model names.
+- Prompt template design or engineering.
+- Ollama, OpenAI, or any specific provider implementation.
+- Embedding algorithms or vector similarity functions.
+- Database schema or source code.
+- API endpoint definitions.
 
-This module is responsible for:
+## 3. Responsibilities
 
-- Managing `ai_chats` and `chat_messages` table rows
-- Routing user messages through the RAG pipeline
-- Calling the `IEmbeddingProvider` to embed user queries and note/attachment content
-- Maintaining the `embeddings` and `vec_embeddings` records
-- Managing the embedding background job queue (`background_jobs` table, type `embedding`)
-- Marking embeddings stale on note/attachment update and triggering re-embedding
-- Building the LLM prompt from retrieved context chunks (within the model's token budget)
-- Streaming LLM responses to the UI via IPC events
-- Populating `chat_messages.citations` with source references from the retrieved context
-- Handling Ollama unavailability gracefully (queueing embedding jobs, degrading chat to offline state)
+- **Conversation Management:** Owning the lifecycle of AI Conversations, including creation, continuation, archival, and deletion.
+- **Session Orchestration:** Managing Chat Sessions that organize AI interactions within a Conversation.
+- **RAG Orchestration:** Coordinating Retrieval Requests to the Embeddings & Retrieval module and composing the resulting Context Package into an AI Request.
+- **Response Lifecycle:** Owning the AI Response from generation through archival, clearly marking it as a derived artifact.
+- **User Transparency:** Ensuring users understand that AI Responses are generated from their Notebook content and may be imperfect.
 
----
+## 4. Ownership and Boundaries
 
-## Planned Specification Documents
+- **Ownership:** This module owns Conversations, Chat Sessions, Messages, AI Requests, AI Responses, and the Conversation Lifecycle.
+- **Boundaries:**
+  - The AI Assistant NEVER owns Notes, Attachments, OCR Results, Search Indexes, Embeddings, or Retrieval pipelines.
+  - AI Responses are derived artifacts. They NEVER become canonical Notebook data.
+  - The AI Assistant NEVER modifies Notes, Attachments, or any canonical Notebook content automatically.
+  - The AI Assistant consumes semantic context; it does not create it.
 
-| File | Status | Content |
-|---|---|---|
-| `01-AIChatLifecycle.md` | Planned | Chat session creation, message flow, streaming, history, delete |
-| `02-RAGPipeline.md` | Planned | Full RAG flow: query → embed → retrieve → context build → infer → cite |
-| `03-EmbeddingPipeline.md` | Planned | Embedding trigger events, queue management, staleness, retry |
-| `04-ContextBuilder.md` | Planned | Context assembly: chunk selection, token budget management, backlink weighting |
-| `05-ModelConfiguration.md` | Planned | Ollama model selection, embedding model selection, model change re-indexing |
-| `06-Citations.md` | Planned | Citation format, source note linking, citation display in chat |
-| `07-ReIndexing.md` | Planned | Full Workspace re-index: trigger conditions, progress tracking, resumable |
+### 4.1 Canonical Intelligence Pipeline
+A conceptual workflow illustrating the complete intelligence pipeline within the Notebook:
 
----
+`Notebook Content` &rarr; `OCR` &rarr; `Search` &rarr; `Embeddings` &rarr; `Retrieval` &rarr; `Context Package` &rarr; `Prompt Assembly` &rarr; `AI Request` &rarr; `AI Response` &rarr; `User Decision` &rarr; `Optional Notebook Update`
 
-## Key Business Rules (Summary)
+- Every stage has a single owner.
+- Ownership transfers only through well-defined interfaces.
+- The AI Assistant consumes context prepared by Retrieval.
+- The AI Assistant never directly modifies Notebook content.
+- Users always remain in control of Notebook changes. Any Optional Notebook Update requires an explicit, deliberate user action.
 
-- All AI inference uses the local Ollama instance by default. No query or content is sent to a remote server unless the user has installed and configured a remote AI plugin.
-- The AI shall only answer from retrieved Workspace content. It shall not use its pre-trained knowledge to fill gaps — unsupported answers are prefaced with an explicit "I don't have information about this in your notes."
-- Every AI response that uses retrieved content shall cite the source notes by title and UUID.
-- Embedding generation is asynchronous and non-blocking — the user may continue working while embeddings are being generated.
-- When the user changes the embedding model, all existing embeddings are invalidated before the new model is used for any retrieval operation.
-- Chat history is Workspace-scoped and persisted in `database.db`. It is not global.
-- Streaming AI responses are delivered via IPC events, not polling.
+## 5. AI Capabilities
 
----
+The AI Assistant exposes capabilities to the user and to other modules. These capabilities are owned by the AI Assistant module. They consume, but do not own, the underlying modules they depend on.
+- **Conversational Q&A:** Answering questions grounded in the user's Notebook content.
+- **Summarization:** Producing derived summaries of Notes or collections of content.
+- **Semantic Discovery Assistance:** Helping users explore related concepts across their Notebook.
+- **Future: Autonomous Agents:** AI-driven background tasks (e.g., "Find all meeting notes from Q1 and summarize action items") — always subject to explicit user authorization.
+- **Future: AI Writing Assistance:** Suggesting completions or refinements within the Editor context, subject to explicit user acceptance before any Note is modified.
 
-## Requirements Traced
+## 6. Dependencies
 
-| Requirement | Description |
-|---|---|
-| FR-AI-01 | AI chat interface within each Workspace |
-| FR-AI-02 | Retrieve semantically relevant content on query |
-| FR-AI-03 | Retrieved content used as RAG context |
-| FR-AI-04 | AI does not use knowledge outside indexed Workspace content |
-| FR-AI-05 | AI cites source notes/attachments used in response |
-| FR-AI-06 | Default provider: Ollama |
-| FR-AI-07 | User selects Ollama model in Workspace settings |
-| FR-AI-08 | Responses streamed incrementally |
-| FR-AI-09 | Chat history persisted and available across sessions |
-| FR-AI-10 | Users can clear chat history |
-| FR-AI-11 | All inference local; no remote calls without explicit user configuration |
-| FR-SEM-01 through FR-SEM-08 | Embedding generation and semantic search |
+- **Embeddings & Retrieval Module:** Supplies the grounded Context Package for each AI Request.
+- **Search Module:** Supplies keyword-matched candidates that may augment retrieval context.
+- **Notes Module:** Canonical source of the text content surfaced via retrieval.
+- **Attachments Module:** Canonical source of file metadata surfaced via retrieval.
+- **OCR Module:** Supplies derived text from images and documents surfaced via retrieval.
+- **Tags Module:** Tag names may be present within retrieved context fragments.
+- **Wiki Links Module:** Link structures may inform retrieval scope.
 
----
+## 7. Interfaces and Events
 
-## Future Considerations
+### 7.1 Consumed Interfaces
+- Accepts user-submitted messages to initiate or continue a Conversation.
+- Accepts Retrieval Results and Context Packages from the Embeddings & Retrieval module.
 
-- **Remote AI provider plugin:** A plugin extension point that allows users to substitute Ollama with an OpenAI-compatible API (e.g., OpenAI, Anthropic, Mistral). The plugin declares the provider; the AI module calls through the `IAiProvider` interface.
-- **AI-assisted writing:** Inline AI suggestions within the editor for grammar, summarization, tone adjustment, and content generation.
-- **AI-generated note summaries:** Automatically generating a one-paragraph summary of a note on demand, stored as a metadata field.
-- **Multi-turn context window management:** Sophisticated context window pruning that retains important earlier turns while fitting within the token budget.
-- **Agent mode:** Allowing the AI to take actions (create notes, update todos, search) in response to natural language instructions.
+### 7.2 Published Events
+- `ConversationCreated` — Emitted when a new Conversation is initiated by the user.
+- `ConversationUpdated` — Emitted when Conversation metadata (e.g., title) is modified.
+- `ConversationArchived` — Emitted when a Conversation is moved to the archive state.
+- `ConversationDeleted` — Emitted when a Conversation is permanently removed.
+- `ChatSessionStarted` — Emitted when an active Chat Session begins.
+- `ChatSessionEnded` — Emitted when a Chat Session concludes.
+- `MessageSubmitted` — Emitted when the user submits a Message, activating the RAG Pipeline.
+- `AIRequestStarted` — Emitted when the AI Request is dispatched to the provider.
+- `AIResponseGenerated` — Emitted when the AI Response is successfully received and stored.
+- `AIResponseCancelled` — Emitted when the user cancels an in-progress generation.
+- `AIResponseFailed` — Emitted when the AI provider returns an error or times out.
+
+### 7.3 Consumed Events
+- `RetrievalCompleted` *(from Embeddings & Retrieval)*
+- `ContextAssembled` *(from Embeddings & Retrieval)*
+- `SearchResultsGenerated` *(from Search, optionally)*
+- `NotePermanentDeleted` *(to detect invalidated context sources)*
+
+## 8. Extension Points
+
+- **Multiple AI Providers:** Alternative local or cloud AI providers may be registered without altering the RAG Pipeline or Conversation ownership rules.
+- **Local AI Models:** On-device model execution preserves privacy and enables fully offline AI interactions.
+- **Cloud AI Models:** External provider APIs may supplement or replace local models, subject to user configuration.
+- **Streaming Delivery:** Progressive, token-by-token response delivery improves perceived responsiveness. Streaming is a delivery mechanism — it does not change ownership or retrieval.
+- **AI Plugins:** Third-party plugins may register AI Tool capabilities that participate in the standard Tool invocation lifecycle.
+- **Custom Prompt Strategies:** Users or plugins may define preferred context selection or composition strategies without altering the core pipeline.
+- **Multi-modal AI:** Future extensions may support image, audio, or video context alongside text retrieval.
+- **AI Agents:** Multi-step autonomous task orchestration, always subject to explicit user authorization per action.
+- **Future Collaboration:** Shared Conversations within a multi-user Workspace, subject to access control rules defined by the Workspace module.
+
+All extensions are additive. Existing Conversation, Session, and Response ownership rules remain unchanged.
+
+## 9. Settings
+
+- Preferred AI Provider (local vs cloud).
+- Automatic context retrieval on message submission vs manual context pinning.
+- Conversation retention policy preferences.
+- AI Response language and style preferences.
+
+## 10. Business Rules
+
+- **Consumer Only:** The AI Assistant consumes Retrieval and Search outputs. It NEVER owns them.
+- **Non-Destructive:** The AI Assistant NEVER modifies Notes, Attachments, OCR Results, Tags, or Wiki Links automatically.
+- **Derived Responses:** AI Responses are derived artifacts. They NEVER become canonical Notebook data.
+- **Conversation Independence:** Conversations are independent from Notes. Deleting a Conversation NEVER deletes Notebook content.
+- **Grounded Generation:** The AI Assistant assembles AI Requests using retrieved Notebook context. It does not generate responses from memory alone when user content is available.
+- **Safe Failures:** A failure in the AI module (e.g., provider unavailable) MUST NOT prevent the user from editing Notes or accessing Attachments.
+
+## 11. Acceptance Criteria
+
+- The user asks "What did I write about the Q3 budget?" and the AI Assistant surfaces an AI Response grounded in retrieved Note fragments, without modifying the source Notes.
+- Deleting an AI Conversation removes all associated Messages and AI Responses without deleting any canonical Note, Attachment, or Tag.
+- A failed AI Response (e.g., provider timeout) is clearly reported to the user. The user can continue editing their Notes without interruption.
+
+## 12. Cross References
+
+- [01-AIAssistantOverview.md](./01-AIAssistantOverview.md)
+- [02-ConversationLifecycle.md](./02-ConversationLifecycle.md)
+- [03-ChatSessions.md](./03-ChatSessions.md)
+- [04-RAGPipeline.md](./04-RAGPipeline.md)
+- [05-PromptAssembly.md](./05-PromptAssembly.md)
+- [06-ResponseGeneration.md](./06-ResponseGeneration.md)
+- [07-AITools.md](./07-AITools.md)
+- [08-WritingAssistance.md](./08-WritingAssistance.md)
+- [09-DocumentAnalysis.md](./09-DocumentAnalysis.md)
+- [10-AIEvents.md](./10-AIEvents.md)
+- [11-ExtensionPoints.md](./11-ExtensionPoints.md)
+- [12-AIGovernance.md](./12-AIGovernance.md)
