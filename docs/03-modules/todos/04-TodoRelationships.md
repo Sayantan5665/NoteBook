@@ -1,5 +1,5 @@
 > **Document Type:** Module Specification
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
 > **Depends On:** Todos Module, Notes, Folders, Tags
 > **Document Owner:** Core Architecture Team
@@ -16,9 +16,10 @@ This document defines the relationships between Todos and other canonical entiti
 
 Todos are fundamentally independent execution entities. However, tasks rarely exist in a vacuum; they often relate to specific knowledge contexts. The Notebook architecture supports optional, unidirectional references from Todos to other canonical entities.
 
-- **Unidirectional Pointer:** A relationship is a pointer from a Todo to a target entity. 
+- **Navigational References:** Relationships are purely navigational references pointing from a Todo to a target entity. 
 - **Optionality:** Relationships are never required for a Todo to exist.
-- **Reference Only:** Relationships denote relevance or context. They do NOT denote ownership, composition, or lifecycle cascading.
+- **No Implied Constraints:** Relationships NEVER imply ownership, containment, synchronization, or duplication.
+- **Integrity:** Deleting or modifying a referenced Notebook entity never transfers ownership. Todo integrity must always be preserved.
 
 ## 3. Supported Relationships
 

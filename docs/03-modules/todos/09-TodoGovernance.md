@@ -1,5 +1,5 @@
 > **Document Type:** Module Specification
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
 > **Depends On:** Todos Module
 > **Document Owner:** Core Architecture Team
@@ -34,17 +34,32 @@ This document serves as the architectural constitution for the Todos module. It 
 
 The following conceptual workflow illustrates the strict lifecycle of a Todo, demonstrating how it interacts with other modules without transferring ownership.
 
-`User` &rarr; `Create Todo` &rarr; `Validate` &rarr; `Organize` &rarr; `Reference Notebook Entities (Optional)` &rarr; `Publish Events` &rarr; `Search Index Update` &rarr; `AI Consumption (Optional)`
+`User` &rarr; `Create Todo` &rarr; `Validate` &rarr; `Organize` &rarr; `Optional Relationships` &rarr; `Publish Events` &rarr; `Search Index` &rarr; `Embeddings (Future)` &rarr; `Retrieval` &rarr; `AI Assistant (Optional)` &rarr; `User Decision`
 
-- **Every stage has a single owner.** The Todos module owns creation, validation, and organization.
-- **Ownership never changes.** A Todo remains a Todo even if it is indexed by Search.
-- **Search and AI consume Todo information but never own Todo entities.** They are downstream consumers of the `Publish Events` phase.
+- **Single Owner:** Each stage has a single owner. The Todos module owns creation, validation, and organization.
+- **Immutable Ownership:** Ownership never transfers across boundaries.
+- **Consumers:** Search, Retrieval, and AI consume Todo information without ever changing Todo ownership.
 
 ## 4. Module Interactions & Dependency Rules
 
+### 4.1 Dependency Principles
 - **Unidirectional Context:** Todos may reference Notes to provide context for a task. This relationship is strictly unidirectional. A Note never references a Todo structurally.
 - **Event-Driven Observation:** Downstream modules (Search, Notifications) observe Todo changes via the Event Bus. The Todos module has no direct dependencies on these consumers.
 - **Upstream Observation:** The Todos module observes canonical module events (e.g., `NoteDeleted`) solely to maintain referential hygiene, never to mutate upstream data.
+
+### 4.2 Search Integration Philosophy
+Search integrates with Todos via the event bus:
+
+`Todo` &rarr; `Search Index` &rarr; `Search`
+
+- **Clarification:** Search consumes Todo information (via events). Search indexes Todo data to make tasks discoverable. Search NEVER owns Todo entities. Search indexes remain strictly derived artifacts.
+
+### 4.3 AI Integration Philosophy (Future)
+Future AI integrations will rely on the retrieval pipeline:
+
+`Todo` &rarr; `Retrieval` &rarr; `AI Assistant`
+
+- **Clarification:** The AI Assistant consumes Todo information through Retrieval. AI may reference Todos as context. AI NEVER owns Todos. AI NEVER modifies Todos automatically. Users always remain in control of task modification.
 
 ## 5. Consistency Rules
 

@@ -1,5 +1,5 @@
 > **Document Type:** Module Specification
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
 > **Depends On:** Todos Module
 > **Document Owner:** Core Architecture Team
@@ -26,7 +26,8 @@ This document defines the lifecycle states of a Todo entity and the transitions 
 ### 2.3 Completion
 - A Todo is marked as `Completed` when the actionable intent is fulfilled.
 - Completion is a state transition recorded on the Todo entity.
-- **Rule:** Todo completion NEVER modifies linked Notes. If a Todo linked to "Meeting Agenda" is completed, the "Meeting Agenda" Note remains byte-for-byte identical.
+- **Todo Completion Philosophy:** Completing a Todo only changes the Todo lifecycle. It NEVER completes a Note, archives a Note, modifies Notebook content, or changes linked entities. Notebook entities remain fully independent.
+- **Rule:** If a Todo linked to "Meeting Agenda" is completed, the "Meeting Agenda" Note remains byte-for-byte identical.
 
 ### 2.4 Reopening
 - A `Completed` Todo may be reverted back to the `Active` state.

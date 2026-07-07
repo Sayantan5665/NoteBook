@@ -1,5 +1,5 @@
 > **Document Type:** Module Specification
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
 > **Depends On:** Todos Module
 > **Document Owner:** Core Architecture Team
@@ -36,7 +36,17 @@ Todos are **first-class Notebook entities**. They exist independently in their o
 
 ## 5. Todo Concepts
 
-- **Todo:** The core atomic entity representing an actionable item. It contains a description (the task text) and various metadata.
+### 5.1 Todo Identity Philosophy
+It is critical to distinguish the conceptual identities within the Todos domain:
+- **Todo:** The canonical actionable entity representing a task.
+- **Todo State:** Represents the current lifecycle state of the task (e.g., Active, Completed).
+- **Todo Relationship:** A unidirectional connection connecting a Todo to other Notebook entities for context.
+- **Todo View:** A derived representation or projection of Todos based on filtering or sorting.
+- **Todo Event:** A communication signal indicating a state transition has occurred.
+
+Each concept has its own distinct responsibility and lifecycle within the action management domain.
+
+### 5.2 Core Terms
 - **Todo List:** A logical grouping container for Todos, allowing users to categorize tasks by project, area, or context.
 - **State:** The completion status of a Todo (e.g., Active, Completed).
 - **Reference:** An optional directional link pointing from a Todo to another Notebook entity (e.g., a Note) to provide context.

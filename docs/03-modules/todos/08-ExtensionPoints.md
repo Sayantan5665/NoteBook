@@ -1,5 +1,5 @@
 > **Document Type:** Module Specification
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
 > **Depends On:** Todos Module
 > **Document Owner:** Core Architecture Team
