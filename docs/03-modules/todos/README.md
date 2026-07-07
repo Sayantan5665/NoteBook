@@ -1,94 +1,91 @@
+> **Document Type:** Module Specification
+> **Status:** Draft
+> **Version:** 1.0
+> **Depends On:** Workspace, Notes (optional)
+> **Document Owner:** Core Architecture Team
+
 # Todos Module
 
-> **Document Type:** Module README
-> **Module:** todos
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §12](../../00-overview/04-FunctionalRequirements.md) · [../../02-database/04-Schema.md §3.7](../../02-database/04-Schema.md) · [../../02-database/11-EntityLifecycle.md §6](../../02-database/11-EntityLifecycle.md) · [../notes/README.md](../notes/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
-
 ---
 
-## Purpose
+## 1. Purpose
 
-The Todos module defines how task items are created, managed, completed, and organized within a Workspace. Todos are first-class entities in Notebook — they are not merely checklist items embedded in note content. They have their own lifecycle, their own table, and their own UI.
+The Todos module provides action management capabilities within the Notebook ecosystem. It enables users to capture, organize, and track actionable items (Todos) independently from, but optionally linked to, the canonical knowledge base (Notes and Folders).
 
-A Todo may optionally be linked to a note, providing context for why the task exists. If the associated note is deleted, the todo becomes standalone — it is never automatically deleted along with the note.
+## 2. Scope
 
----
+**This document covers:**
+- Todo entity concepts and lifecycle.
+- Organizational metadata (lists, priorities, status, due dates).
+- Relationships between Todos and other Notebook entities.
+- Event models and extension points for action management.
 
-## Scope
+**This document does NOT cover:**
+- Database schema or physical persistence layers.
+- API endpoints or transport layers.
+- Specific task scheduling algorithms or reminder delivery mechanisms.
+- Notification UI implementation.
+- Source code structures.
 
-**This module covers:**
-- Creating todos (standalone or linked to a note)
-- Editing todo title, due date, priority, and completion status
-- Marking todos complete and incomplete
-- Soft-deleting todos (moving to Trash)
-- Restoring todos from Trash
-- Permanently deleting todos
-- The Workspace-level todo list view with filtering (by completion, by due date, by priority)
-- The note-contextual todo list (todos linked to a specific note, displayed in the note panel)
-- Note-link behavior: linking a todo to a note, unlinking, and behavior when the linked note is deleted
+## 3. Responsibilities
 
-**This module does NOT cover:**
-- Checklist items within note content (those are editor nodes managed by `editor/`)
-- Notifications for approaching due dates (see `notifications/`)
+- **Todo Lifecycle Management:** Governing the creation, modification, completion, archiving, and deletion of Todos.
+- **Organization and Metadata:** Maintaining structured attributes (status, priority, due dates, lists) that enable grouping and filtering.
+- **Relationship Management:** Managing optional, non-destructive references from Todos to other canonical entities (e.g., Notes).
 
----
+## 4. Ownership
 
-## Responsibilities
+- **Ownership:** The Todos module completely owns Todo entities, Todo Lists, and Todo metadata.
+- **Boundaries:** 
+  - Todos are independent entities. They do NOT own Notes, Folders, or Attachments.
+  - A Todo may reference a Note, but this relationship is strictly read-only from the Todo's perspective.
+  - Todos NEVER automatically modify canonical Notebook entities.
 
-This module is responsible for:
+## 5. Dependencies
 
-- Creating `todos` table rows with optional `note_id` foreign key
-- Updating todo fields (title, completed, due_date, priority, note_id)
-- Providing the Workspace todo list, with filtering and sorting
-- Providing note-specific todo lists to the note panel
-- Handling the `ON DELETE SET NULL` cascade: when a linked note is deleted, converting the todo to standalone without deleting it
-- Managing soft-delete and restore of individual todos
+- **Workspace Module:** Todos exist within a Workspace. The Workspace defines the logical boundary and access context.
+- **Notes Module (Optional):** Todos may reference Notes to provide context for an action.
 
----
+## 6. Consumed Interfaces
 
-## Planned Specification Documents
+- Accepts user commands to create, update, complete, archive, or delete Todos.
+- Accepts queries to filter, sort, and retrieve Todos based on metadata.
 
-| File | Status | Content |
-|---|---|---|
-| `01-TodoLifecycle.md` | Planned | Create, edit, complete, delete, restore workflows and state diagram |
-| `02-TodoOwnership.md` | Planned | Standalone vs note-linked todos, link/unlink, note deletion behavior |
-| `03-TodoListView.md` | Planned | Workspace todo list: filtering by status, due date, priority; sorting |
-| `04-NoteTodoPanel.md` | Planned | Displaying note-specific todos within the note view |
+## 7. Published Events
 
----
+- `TodoCreated`: Emitted when a new Todo is captured.
+- `TodoUpdated`: Emitted when a Todo's content or metadata changes.
+- `TodoCompleted`: Emitted when a Todo is marked as done.
+- `TodoReopened`: Emitted when a completed Todo is reverted to an active state.
+- `TodoArchived`: Emitted when a Todo is moved to the archive.
+- `TodoDeleted`: Emitted when a Todo is permanently removed.
 
-## Key Business Rules (Summary)
+## 8. Consumed Events
 
-- A todo with `note_id = NULL` is standalone. A todo with `note_id = <uuid>` is note-linked. Both are managed identically by the repository layer.
-- When a linked note is permanently deleted, the todo's `note_id` is set to `NULL` by the `ON DELETE SET NULL` cascade — the todo is not deleted.
-- Completing a todo sets `completed = 1` and preserves the record. It does not move the todo to Trash.
-- Todos are soft-deleted explicitly by user action, not by note actions.
-- Priority is optional. Todos without a priority are sorted below prioritized todos in the default view.
-- Due dates are optional. Todos without a due date appear after due-dated todos in date-sorted views.
+- `NotePermanentDeleted`: Consumed to gracefully handle dangling references if a linked Note is removed.
+- `WorkspaceDeleted`: Consumed to cascade deletion of all Todos within the workspace.
 
----
+## 9. Extension Points
 
-## Requirements Traced
+- **Due Date Reminders (Future):** Integration with a scheduling module to trigger local notifications.
+- **AI Task Extraction (Future):** Permitting the AI Assistant to suggest new Todos based on Note content, always subject to explicit user acceptance.
+- **Calendar Integrations (Future):** Syncing Todos with external calendar providers via plugins.
 
-| Requirement | Description |
-|---|---|
-| FR-TD-01 | Create todo items within a Workspace |
-| FR-TD-02 | Title, completion status, creation timestamp |
-| FR-TD-03 | Optional: due date, priority, description |
-| FR-TD-04 | Optional note association |
-| FR-TD-05 | Mark todos complete/incomplete |
-| FR-TD-06 | Edit and delete todos |
-| FR-TD-07 | Workspace-level todo view, filterable by completion |
+## 10. Settings
 
----
+- Default Todo List for newly captured items.
+- Default priority assignment.
+- Archive policies (e.g., automatically archive completed Todos after N days).
+- Sorting preferences (e.g., always group by due date).
 
-## Future Considerations
+## 11. Acceptance Criteria
 
-- **Todo due date notifications:** Alerting the user when a todo's due date is approaching or past due. This integrates with the `notifications/` module.
-- **Recurring todos:** Todos that automatically reset to incomplete on a schedule (daily, weekly, monthly).
-- **Todo sub-tasks:** Hierarchical todos (a todo with child todos). This may require a schema change.
-- **Todo boards (Kanban):** A board view for todos with configurable columns (e.g., To Do, In Progress, Done).
-- **Todo export:** Exporting the Workspace todo list as Markdown task list or CSV.
+- A user can create a Todo, assign it a due date, and mark it complete without any interaction with the Notes module.
+- A user can link a Todo to an existing Note. Completing the Todo leaves the linked Note entirely unmodified.
+- Deleting a Note that is referenced by a Todo leaves the Todo intact, simply removing the resolvable link.
+
+## 12. Cross References
+
+- [01-TodosOverview.md](./01-TodosOverview.md)
+- [02-TodoLifecycle.md](./02-TodoLifecycle.md)
+- [03-TodoOrganization.md](./03-TodoOrganization.md)

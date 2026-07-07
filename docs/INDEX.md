@@ -152,7 +152,7 @@ The `03-modules/` directory contains detailed functional specifications for disc
 | **Tags** | Provides flat, non-hierarchical categorization. | `03-modules/tags/` | *Placeholder* | Notes, Search |
 | **Search** | Full-Text Search (FTS) and hybrid retrieval. | `03-modules/search/` | *Placeholder* | Notes, Tags, AI |
 | **AI** | Local LLM interactions, RAG, and embeddings. | `03-modules/ai/` | Approved / Frozen | Search, Notes |
-| **Todos** | Task extraction and tracking from within Notes. | `03-modules/todos/` | *Placeholder* | Notes |
+| **Todos** | Task extraction and tracking from within Notes. | `03-modules/todos/` | Approved / Frozen | Notes |
 | **Synchronization** | Peer-to-peer or cloud sync (e.g., Google Drive). | `03-modules/sync/` | *Placeholder* | Workspace, Backup |
 | **Backup** | Point-in-time local automated backups. | `03-modules/backup/` | *Placeholder* | Workspace, Sync |
 | **Import / Export** | Data migration into and out of Notebook. | `03-modules/import-export/` | *Placeholder* | Workspace |

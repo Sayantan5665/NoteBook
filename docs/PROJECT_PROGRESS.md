@@ -38,6 +38,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ Workspace Module Frozen
 - ✔ Folder Module Frozen
 - ✔ AI Module Frozen
+- ✔ Todos Module Frozen
 
 **Next Module:** Notes
 
@@ -93,7 +94,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 | **Tags** | Pending | Pending | No |
 | **Search** | Pending | Pending | No |
 | **AI** | Complete | Approved | Yes |
-| **Todos** | Pending | Pending | No |
+| **Todos** | Complete | Approved | Yes |
 | **Synchronization** | Pending | Pending | No |
 | **Backup** | Pending | Pending | No |
 | **Import / Export** | Pending | Pending | No |
@@ -134,6 +135,7 @@ The following documents have been approved and frozen. Frozen documents should o
 - `docs/03-modules/workspace/*` (Workspace Module Specification)
 - `docs/03-modules/folder/*` (Folder Module Specification)
 - `docs/03-modules/ai/*` (AI Module Specification)
+- `docs/03-modules/todos/*` (Todos Module Specification)
 - `docs/INDEX.md` (Project Index)
 
 ---
