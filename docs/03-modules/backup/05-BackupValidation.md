@@ -18,6 +18,9 @@ The Backup Validation subsystem is the gatekeeper that guarantees the integrity 
 - **Invalid backups are never restored.** No exceptions.
 - **Corrupt workspaces are never backed up.** If the active database is corrupt, creating a backup implies a false sense of security.
 
+### 2.1 Backup Metadata Philosophy
+Backup metadata assists validation. Examples include creation timestamp, application version, backup format version, and workspace identifier. Metadata never replaces Notebook content; it purely exists to ensure that a derived artifact is safely compatible with the target environment.
+
 ---
 
 ## 3. Validation Phases
@@ -44,9 +47,11 @@ If a restore operation fails mid-swap, the recovery process kicks in to revert t
 
 ## 4. Business Rules
 
-- **Validation protects Notebook integrity.**
+- **Validation protects Notebook integrity.** Notebook integrity must always be preserved.
+- **Backup failures never damage the active Workspace.**
+- **Restore failures never partially overwrite Notebook data.**
+- **Restore is completed only after successful validation.** If validation fails, the existing Workspace remains completely unchanged.
 - **Invalid backups are never restored.**
-- **Restore requires successful validation.**
 
 ---
 

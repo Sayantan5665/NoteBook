@@ -12,9 +12,11 @@ The Backup Overview defines the conceptual foundation of the Backup & Restore mo
 
 ---
 
-## 2. Backup Philosophy
+## 2. Backup, Restore, and Recovery Philosophy
 
-- **Backups are derived artifacts.** A backup is a point-in-time representation of a Workspace. It is not the Workspace itself.
+- **Backup creates recoverable snapshots.** A backup generates a point-in-time representation of a Workspace. It is a derived artifact, not the Workspace itself.
+- **Restore recreates Notebook state.** It promotes a validated snapshot back into an active Workspace.
+- **Recovery represents the overall process.** It is the overarching workflow of returning a Workspace to a usable state after data loss or corruption. Recovery coordinates restoration but never changes Notebook ownership.
 - **Backups never replace Notebook entities.** Generating a backup has zero effect on the active Domain entities.
 - **Notebook data remains canonical.** The local SQLite database and live attachment directory are the sole sources of truth.
 - **Immutability.** Once a backup artifact is created and validated, it is treated as an immutable object.
@@ -31,8 +33,8 @@ A signal that initiates a backup operation. It can be triggered manually by the 
 ### 3.2 Backup Session
 An ephemeral coordination activity that manages a single backup operation from start to finish. It tracks progress and state but ceases to exist once the operation completes.
 
-### 3.3 Backup Artifact
-The physical output of a Backup Session (e.g., a `.zip` or `.tar.gz` file containing the SQLite database and attachments). It is a derived artifact, not canonical data.
+### 3.3 Backup Artifact (Snapshot Philosophy)
+A Backup Artifact is an immutable snapshot representing Notebook state at one specific point in time. Snapshots never become live Notebook entities on their own. Furthermore, snapshots cannot be modified after successful creation; they are strictly derived artifacts, not canonical data.
 
 ### 3.4 Backup Strategy
 The rules engine determining *how* and *when* a backup is performed (e.g., Full, Incremental, Scheduled).

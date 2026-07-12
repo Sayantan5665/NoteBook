@@ -40,6 +40,7 @@ The Backup Governance document defines the strict ownership boundaries, responsi
 - **Backup coordinates protection of Notebook data.** It is infrastructure, built to ensure the persistence and recoverability of the user's data.
 - **Notebook entities remain canonical.** The act of backing up data does not change its canonical status.
 - **Module boundaries are absolute.** The Backup module does not query the `Notes` table to figure out what to back up; it backs up the entire SQLite database file as an opaque payload.
+- **AI and Derived Artifact Philosophy:** Backup preserves canonical Notebook data. Derived artifacts such as Search indexes, Embeddings, and AI semantic artifacts may be regenerated after restoration. Notebook entities remain the canonical source of truth.
 
 ---
 
@@ -52,9 +53,10 @@ flowchart TD
     A["Notebook Workspace\n(Owner: Domain)"] --> B["Backup Request\n(Owner: Backup Engine)"]
     B --> C["Validation\n(Owner: Backup Validator)"]
     C --> D["Backup Session\n(Owner: Backup Engine)"]
-    D --> E["Backup Artifact\n(Owner: File System / Provider)"]
+    D --> E["Snapshot Creation\n(Owner: Backup Engine)"]
     E --> F["Integrity Validation\n(Owner: Backup Validator)"]
-    F --> G["Completion\n(Owner: Backup Engine)"]
+    F --> G["Backup Artifact\n(Owner: File System / Provider)"]
+    G --> H["Completion\n(Owner: Backup Engine)"]
 ```
 
 ### 4.2 Restore Workflow
@@ -64,12 +66,13 @@ flowchart TD
     A["Backup Artifact\n(Owner: File System / Provider)"] --> B["Restore Request\n(Owner: Backup Engine)"]
     B --> C["Validation\n(Owner: Backup Validator)"]
     C --> D["Restore Session\n(Owner: Backup Engine)"]
-    D --> E["Notebook Workspace\n(Owner: Domain)"]
-    E --> F["Completion\n(Owner: Backup Engine)"]
+    D --> E["Workspace Recovery\n(Owner: Backup Engine)"]
+    E --> F["Integrity Validation\n(Owner: Backup Validator)"]
+    F --> G["Completion\n(Owner: Backup Engine)"]
 ```
 
 ### 4.3 Workflow Clarifications
-- **Every stage has one owner.** There is no overlapping responsibility between the Domain and the Backup engine.
+- **Each stage has a single owner.** There is no overlapping responsibility between the Domain and the Backup engine.
 - **Ownership never transfers.**
 - **Backup artifacts remain derived artifacts.** They only transition back to being Notebook data once a Restore Session officially completes the swap into the canonical path.
 
@@ -81,7 +84,10 @@ flowchart TD
 - **Restore requires successful validation.**
 - **Backup artifacts never become Notebook entities.** They are isolated snapshots.
 - **Restore never changes Notebook ownership.**
-- **Failures never corrupt Notebook data.**
+- **Backup failures never damage the active Workspace.**
+- **Restore failures never partially overwrite Notebook data.**
+- **If validation fails, the existing Workspace remains unchanged.**
+- **Notebook integrity must always be preserved.**
 
 ---
 
