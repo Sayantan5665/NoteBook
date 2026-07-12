@@ -1,0 +1,22 @@
+{
+  "name": "notebook",
+  "version": "1.0.0",
+  "description": "Notebook Application Workspace",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @notebook/desktop dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "eslint . --ext .ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "eslint-plugin-boundaries": "^3.0.0",
+    "@types/node": "^20.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}

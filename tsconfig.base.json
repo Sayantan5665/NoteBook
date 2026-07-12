@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@notebook/domain": ["packages/domain/src"],
+      "@notebook/domain/*": ["packages/domain/src/*"],
+      "@notebook/application": ["packages/application/src"],
+      "@notebook/application/*": ["packages/application/src/*"],
+      "@notebook/infrastructure": ["packages/infrastructure/src"],
+      "@notebook/infrastructure/*": ["packages/infrastructure/src/*"],
+      "@notebook/ipc-contracts": ["packages/ipc-contracts/src"],
+      "@notebook/ipc-contracts/*": ["packages/ipc-contracts/src/*"],
+      "@notebook/shared-types": ["packages/shared-types/src"],
+      "@notebook/shared-types/*": ["packages/shared-types/src/*"],
+      "@notebook/plugin-sdk": ["packages/plugin-sdk/src"],
+      "@notebook/plugin-sdk/*": ["packages/plugin-sdk/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "build"]
+}
