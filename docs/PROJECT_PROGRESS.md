@@ -39,6 +39,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ Folder Module Frozen
 - ✔ AI Module Frozen
 - ✔ Todos Module Frozen
+- ✔ Synchronization Module Frozen (v1.0)
 
 **Next Module:** Notes
 
@@ -95,7 +96,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 | **Search** | Pending | Pending | No |
 | **AI** | Complete | Approved | Yes |
 | **Todos** | Complete | Approved | Yes |
-| **Synchronization** | Pending | Pending | No |
+| **Synchronization** | Complete | Approved | Yes (v1.0) |
 | **Backup** | Pending | Pending | No |
 | **Import / Export** | Pending | Pending | No |
 | **Plugins** | Pending | Pending | No |

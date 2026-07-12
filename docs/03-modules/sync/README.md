@@ -1,106 +1,127 @@
-# Sync Module
+# Synchronization Module
 
-> **Document Type:** Module README
-> **Module:** sync
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §14](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/12-SynchronizationArchitecture.md](../../01-architecture/12-SynchronizationArchitecture.md) · [../../01-architecture/11-SecurityArchitecture.md](../../01-architecture/11-SecurityArchitecture.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md) · [../workspace/README.md](../workspace/README.md) · [../backup/README.md](../backup/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> **Module:** Synchronization (Sync)
+> **Status:** Approved
+> **Applies To:** Notebook Application (Workspace-Level)
 
 ---
 
-## Purpose
+## 1. Purpose
 
-The Sync module defines how Notebook synchronizes a Workspace to the user's Google Drive account — the only optional network-dependent feature in the core application.
+The Synchronization module is responsible for coordinating the exchange of Notebook data between the local authoritative storage and one or more remote storage locations (e.g., Google Drive, local network folders, or user-defined targets). 
 
-Sync is a convenience feature, not a dependency. Every core feature works entirely without sync enabled. Sync allows users to access their Workspace from multiple machines or to have a cloud-accessible copy as a secondary safeguard against machine loss.
-
-The local SQLite database and filesystem are always authoritative. Google Drive is a replica. The sync system's job is to keep the replica consistent with the local copy, and to handle the merge when both sides have changed.
+It provides the infrastructure to keep a Workspace backed up and synchronized across multiple devices without tying the application to any single cloud provider or network topology.
 
 ---
 
-## Scope
+## 2. Scope
 
-**This module covers:**
-- Google Drive OAuth 2.0 authorization flow
-- Secure storage and retrieval of OAuth credentials (system credential store)
-- Initiating a sync operation (user-initiated and scheduled)
-- Sync status display (idle, syncing, last synced timestamp, error)
-- Uploading local changes to Google Drive
-- Downloading remote changes from Google Drive
-- Conflict detection and resolution options (keep local, keep remote, keep both)
-- Pre-sync safety backup creation before any overwrite
-- Disabling sync and revoking Google Drive access
-- Incremental attachment sync based on file checksums
+**In Scope:**
+- Orchestration of data synchronization workflows.
+- Detection of local and remote changes via the Workspace Manifest.
+- Preparation and validation of data payloads prior to exchange.
+- Coordination with pluggable synchronization providers.
+- Tracking of sync state, timestamps, and device synchronization versions.
+- Graceful handling of network failures, cancellations, and interruptions.
 
-**This module does NOT cover:**
-- Backup creation and restore (see `backup/`)
-- Import/export of Workspace archives (see `import-export/`)
-- Other cloud sync providers (these would be added via plugins)
+**Out of Scope:**
+- Ownership or storage of Notebook domain entities.
+- Direct manipulation of SQLite databases or file system files (handled by repositories).
+- Specific provider implementations (e.g., Google Drive REST API details).
+- Resolution of content-level merge conflicts (handled by conflict resolution subsystem - future).
 
 ---
 
-## Responsibilities
+## 3. Ownership
 
-This module is responsible for:
+The Synchronization module **does NOT own any Notebook entities**. 
 
-- Managing the Google Drive OAuth authorization lifecycle (authorize, refresh, revoke)
-- Reading and writing `manifest.json.syncConfig` fields for sync state tracking
-- Determining sync delta: which files have changed locally since last sync
-- Transferring database and attachment files to Google Drive
-- Transferring changes from Google Drive to local storage
-- Detecting conflicts: where both local and remote versions have changed since last sync
-- Presenting conflict resolution UI to the user
-- Creating a pre-sync backup before overwriting local data with remote changes
-- Updating `manifest.json` with the last sync timestamp after a successful sync
+- Notes, Folders, Attachments, Tags, Todos, and AI Chats are owned by their respective modules.
+- The local SQLite database and local filesystem are the canonical sources of truth.
+- Synchronization never becomes the source of truth; it acts solely as a broker to move data between the canonical local store and external replicas.
 
 ---
 
-## Planned Specification Documents
+## 4. Responsibilities
 
-| File | Status | Content |
+- **Detect:** Identify when local or remote changes have occurred by inspecting the Workspace Manifest.
+- **Prepare:** Coordinate with application services to gather the necessary data payloads for export.
+- **Validate:** Ensure data integrity before sending to or integrating from a remote provider.
+- **Coordinate:** Delegate actual data transmission to the active `ISyncProvider`.
+- **Record:** Update the Workspace Manifest with new sync versions and timestamps upon successful completion.
+
+---
+
+## 5. Dependencies
+
+The Synchronization module depends on:
+
+- **Workspace Module:** For identifying the active Workspace and accessing the Workspace Manifest.
+- **Configuration Module:** For determining sync preferences (manual vs. automatic, selected provider).
+- **Event Bus:** For publishing sync status events to the UI and listening to network state changes.
+- **Domain Repositories:** For reading and writing data (via Application Services) when integrating changes.
+
+---
+
+## 6. Interfaces
+
+### 6.1 Consumed Interfaces
+
+- `IWorkspaceSession`: To get the current Workspace context.
+- `IWorkspaceManifestManager`: To read/write sync versions and timestamps.
+- `INetworkMonitor`: To detect online/offline status.
+
+### 6.2 Extension Points
+
+- `ISyncProvider`: The core extension point. Any class implementing this interface can act as a synchronization target. The module coordinates with this interface without knowing if the provider is cloud-based, local-network, or a third-party plugin.
+
+---
+
+## 7. Events
+
+### 7.1 Published Events
+
+| Event | Trigger | Payload |
 |---|---|---|
-| `01-GoogleDriveAuth.md` | Planned | OAuth 2.0 flow, credential storage, token refresh, revocation |
-| `02-SyncFlow.md` | Planned | Sync initiation, delta detection, upload, download, sync status |
-| `03-ConflictResolution.md` | Planned | Conflict detection, resolution modes, user dialog |
-| `04-SyncSafetyBackup.md` | Planned | Pre-sync backup creation and handling if backup fails |
-| `05-IncrementalAttachmentSync.md` | Planned | Checksum-based incremental attachment sync |
+| `SyncStartedEvent` | A sync operation begins | `workspaceId`, `strategy` |
+| `SyncProgressEvent` | The provider reports progress | `workspaceId`, `percentage`, `statusText` |
+| `SyncCompletedEvent` | A sync operation finishes successfully | `workspaceId`, `durationMs`, `bytesTransferred` |
+| `SyncFailedEvent` | A sync operation fails | `workspaceId`, `errorType`, `message` |
+| `SyncCancelledEvent` | The user aborts a running sync | `workspaceId` |
 
----
+### 7.2 Consumed Events
 
-## Key Business Rules (Summary)
-
-- Sync is opt-in. The application never initiates a sync without user authorization.
-- The local Workspace is always authoritative. Google Drive is always a replica, never the primary.
-- OAuth credentials are stored in the local system credential store (OS keychain). They are never stored in `manifest.json` or `database.db`.
-- Before overwriting any local file with a remote version, a pre-sync backup is created. If the backup fails, the sync is aborted.
-- A sync failure never corrupts or deletes local data.
-- `backups/` directory contents are never synced to Google Drive.
-- Sync is always per-Workspace. Enabling or disabling sync for one Workspace does not affect any other Workspace.
-- Attachment files are synced incrementally using SHA-256 checksums — files with matching checksums are not retransferred.
-
----
-
-## Requirements Traced
-
-| Requirement | Description |
+| Event | Response |
 |---|---|
-| FR-SYNC-01 | Optional synchronization to user-owned Google Drive |
-| FR-SYNC-02 | Google Drive OAuth 2.0 authorization |
-| FR-SYNC-03 | OAuth credentials stored securely in system credential store |
-| FR-SYNC-04 | Sync is user-initiated; no silent background sync |
-| FR-SYNC-05 | Conflict detection and user-resolution options |
-| FR-SYNC-06 | Sync status display in the Workspace UI |
-| FR-SYNC-07 | Sync failure does not corrupt local data |
-| FR-SYNC-08 | Revoke Google Drive access and disable sync |
-| FR-SYNC-09 | All core features remain operational without sync |
-| FR-SYNC-10 | Google Drive is a replica only; local SQLite is always authoritative |
+| `WorkspaceOpenedEvent` | Initialize sync state for the Workspace; trigger auto-sync if configured. |
+| `NetworkStatusChangedEvent` | Pause or resume background sync queues based on connectivity. |
+| `NoteSavedEvent` | Flag the Workspace as dirty to trigger debounce-based automatic sync. |
 
 ---
 
-## Future Considerations
+## 8. Settings
 
-- **Scheduled automatic sync:** Allow users to configure a sync schedule (e.g., every hour, daily at midnight) for hands-free sync. FR-SYNC-04 permits user-configured schedules; this is a future UX enhancement.
-- **Alternative sync providers (plugin):** iCloud Drive, Dropbox, or OneDrive sync via plugin extension points. The sync subsystem is designed with a provider abstraction to support this.
-- **Selective sync:** Allow users to exclude specific folders or large attachments from sync to manage Google Drive quota.
-- **Sync conflict history:** A log of past conflicts and their resolutions, for review and audit.
+The module consumes the following Workspace-level configurations:
+
+- `syncEnabled` (boolean): Whether sync is active for the Workspace.
+- `syncProviderId` (string): The registered ID of the active `ISyncProvider`.
+- `syncStrategy` (enum): Manual, On-Change, or Scheduled.
+
+---
+
+## 9. Acceptance Criteria
+
+- Synchronization can be completely disabled for a Workspace without affecting local functionality.
+- The module never modifies local data without explicit coordination through Application Services.
+- The module gracefully aborts if the network is disconnected, emitting a `SyncFailedEvent` without corrupting local state.
+- Synchronization providers can be swapped (e.g., from Google Drive to Local Folder) without changing the core Synchronization module logic.
+
+---
+
+## 10. Cross References
+
+- [01-SynchronizationOverview.md](./01-SynchronizationOverview.md)
+- [02-SynchronizationLifecycle.md](./02-SynchronizationLifecycle.md)
+- [03-SynchronizationStrategies.md](./03-SynchronizationStrategies.md)
+- [Architecture: 12-SynchronizationArchitecture](../../01-architecture/12-SynchronizationArchitecture.md)
+- [Architecture: 15-WorkspaceManifest](../../01-architecture/15-WorkspaceManifest.md)
