@@ -1,8 +1,17 @@
 {
-    "main":  "src/index.ts",
-    "name":  "@notebook/desktop",
-    "version":  "1.0.0",
-    "scripts":  {
-                    "build":  "tsc -b"
-                }
+    "main": "src/index.ts",
+    "name": "@notebook/desktop",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "tsc -b"
+    },
+    "dependencies": {
+        "electron": "^43.1.0"
+    },
+    "devDependencies": {
+        "concurrently": "^10.0.3",
+        "cross-env": "^10.1.0",
+        "electron-builder": "^26.15.3",
+        "wait-on": "^9.0.10"
+    }
 }

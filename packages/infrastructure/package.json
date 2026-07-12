@@ -1,8 +1,14 @@
 {
-    "main":  "src/index.ts",
-    "name":  "@notebook/infrastructure",
-    "version":  "1.0.0",
-    "scripts":  {
-                    "build":  "tsc -b"
-                }
+    "main": "src/index.ts",
+    "name": "@notebook/infrastructure",
+    "version": "1.0.0",
+    "scripts": {
+        "build": "tsc -b"
+    },
+    "devDependencies": {
+        "prisma": "^7.8.0"
+    },
+    "dependencies": {
+        "@prisma/client": "^7.8.0"
+    }
 }
