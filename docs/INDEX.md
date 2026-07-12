@@ -72,6 +72,10 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Guidelines and specifications for the Plugin ecosystem.
   - **Contents:** Extension points, API contracts, security sandboxing.
   - **When to reference:** Building third-party plugins or expanding the SDK.
+- **`05-development-standards/`**
+  - **Purpose:** Engineering standards and implementation guidelines.
+  - **Contents:** Architecture principles, coding standards, logging, error handling, security, and Git workflows.
+  - **When to reference:** Onboarding, writing code, or performing code reviews.
 - **`06-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
