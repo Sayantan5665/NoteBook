@@ -15,6 +15,8 @@ The Plugin Lifecycle documents the strict sequence of states a Plugin transition
 ## 2. Lifecycle Philosophy
 
 - **Plugins are validated before activation.** No plugin code runs until its manifest and signatures (if applicable) are verified.
+- **A Plugin Package is a distributable artifact.** An Installed Plugin represents a validated installation. A Plugin Instance represents an active runtime participant.
+- **Activation creates a runtime instance.** Deactivation removes the runtime instance without uninstalling the plugin.
 - **Failed plugins never destabilize Notebook.** Failures are isolated.
 - **Notebook continues operating safely even if plugins fail.**
 

@@ -25,6 +25,9 @@ The Permissions and Security document defines the conceptual model that restrict
 
 ## 3. Permission Model
 
+- **Plugin Capability:** Describes what a plugin is designed to perform (e.g., 'Provides Markdown Export').
+- **Plugin Permission:** Describes what the user authorizes the plugin to perform (e.g., 'Read Notes'). Permissions always remain under user control.
+
 Permissions are conceptual rights granted to a Plugin Instance. Examples include:
 
 - **Read Notes:** Allows the plugin to query the active Workspace for Note content.

@@ -47,7 +47,7 @@ The Plugin Governance document establishes the strict ownership boundaries that 
 - **Notebook Core remains fully functional without plugins.**
 - **Plugins never own Notebook entities.**
 - **Plugins communicate only through approved extension points.**
-- **Plugin failures never corrupt Notebook data.**
+- **Plugin failures remain isolated to the affected plugin.** Notebook Core continues operating normally. Plugin failures never corrupt Notebook entities.
 - **Permissions are user controlled.**
 - **Extension points remain stable public contracts.**
 
@@ -59,7 +59,13 @@ The Plugin Governance document establishes the strict ownership boundaries that 
 
 ---
 
-## 7. Cross References
+## 7. Future Enhancements
+
+- **Plugin discovery, Plugin catalog, Plugin distribution:** Future capabilities may extend the plugin ecosystem to support centralized discovery and distribution. These are ecosystem extensions and are not responsibilities of the Plugin SDK itself.
+
+---
+
+## 8. Cross References
 
 - [01-PluginOverview.md](./01-PluginOverview.md)
 - [04-PermissionsAndSecurity.md](./04-PermissionsAndSecurity.md)

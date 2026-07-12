@@ -16,8 +16,9 @@ The Version Compatibility document establishes the rules governing how the Plugi
 
 - **Plugins target SDK versions.** A plugin manifest explicitly declares which version of the Notebook SDK it was built for.
 - **Notebook evolves independently.** The core application can update its internal architecture without breaking plugins, provided the public Extension Points remain stable.
+- **Extension points may evolve over time.**
 - **Backward compatibility is preferred whenever practical.**
-- **Deprecated extension points follow a managed lifecycle.** Features are not removed overnight.
+- **Deprecated extension points follow a managed lifecycle before removal.** Features are not removed overnight.
 
 ---
 
