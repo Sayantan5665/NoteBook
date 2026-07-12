@@ -1,8 +1,9 @@
 # 05 — Settings Events
 
 > **Module:** Settings
-> **Status:** Approved
-> **Applies To:** Notebook Application
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 
 ---
 

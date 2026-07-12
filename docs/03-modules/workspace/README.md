@@ -2,10 +2,9 @@
 
 > **Document Type:** Module README
 > **Module:** workspace
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §3](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/01-SystemOverview.md §6](../../01-architecture/01-SystemOverview.md) · [../../01-architecture/ADR-009-WorkspaceIsolation.md](../../01-architecture/ADR-009-WorkspaceIsolation.md) · [../../01-architecture/ADR-010-WorkspaceManifest.md](../../01-architecture/ADR-010-WorkspaceManifest.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 
 ---
 

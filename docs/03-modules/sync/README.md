@@ -1,8 +1,9 @@
 # Synchronization Module
 
 > **Module:** Synchronization (Sync)
-> **Status:** Approved
-> **Applies To:** Notebook Application (Workspace-Level)
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 
 ---
 

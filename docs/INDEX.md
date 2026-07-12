@@ -142,23 +142,25 @@ The `03-modules/` directory contains detailed functional specifications for disc
 
 | Module | Purpose | Location | Status | Related Modules |
 |---|---|---|---|---|
-| **Workspace** | Manages the root logical container and database lifecycle. | `03-modules/workspace/` | Approved / Frozen | Folder, Notes, Settings |
-| **Folder** | Provides hierarchical organization for Notes. | `03-modules/folder/` | Approved / Frozen | Workspace, Notes |
-| **Notes** | Core content management and note-taking logic. | `03-modules/notes/` | *Placeholder* | Folder, Editor, Attachments |
-| **Editor** | The rich-text / markdown editing interface. | `03-modules/editor/` | *Placeholder* | Notes, Wiki Links |
-| **Wiki Links** | Manages bidirectional linking between content. | `03-modules/wiki-links/` | *Placeholder* | Notes, Backlinks |
-| **Backlinks** | Derives and displays reverse link relationships. | `03-modules/backlinks/` | *Placeholder* | Wiki Links, Notes |
-| **Attachments** | Handles binary file storage and metadata. | `03-modules/attachments/` | *Placeholder* | Notes, Search |
-| **Tags** | Provides flat, non-hierarchical categorization. | `03-modules/tags/` | *Placeholder* | Notes, Search |
-| **Search** | Full-Text Search (FTS) and hybrid retrieval. | `03-modules/search/` | *Placeholder* | Notes, Tags, AI |
-| **AI** | Local LLM interactions, RAG, and embeddings. | `03-modules/ai/` | Approved / Frozen | Search, Notes |
-| **Todos** | Task extraction and tracking from within Notes. | `03-modules/todos/` | Approved / Frozen | Notes |
-| **Synchronization** | Peer-to-peer or cloud sync (e.g., Google Drive). | `03-modules/sync/` | *Placeholder* | Workspace, Backup |
-| **Backup** | Point-in-time local automated backups. | `03-modules/backup/` | *Placeholder* | Workspace, Sync |
-| **Import / Export** | Data migration into and out of Notebook. | `03-modules/import-export/` | *Placeholder* | Workspace |
-| **Plugins** | Extensibility management and execution. | `03-modules/plugins/` | *Placeholder* | Settings |
-| **Settings** | Application and Workspace-level configurations. | `03-modules/settings/` | *Placeholder* | Workspace |
-| **Notifications** | System alerts, toasts, and background job statuses. | `03-modules/notifications/` | *Placeholder* | Workspace |
+| **Workspace** | Manages the root logical container and database lifecycle. | `03-modules/workspace/` | Approved / Frozen (v1.0) | Folder, Notes, Settings |
+| **Folder** | Provides hierarchical organization for Notes. | `03-modules/folder/` | Approved / Frozen (v1.0) | Workspace, Notes |
+| **Notes** | Core content management and note-taking logic. | `03-modules/notes/` | Approved / Frozen (v1.0) | Folder, Editor, Attachments |
+| **Editor** | The rich-text / markdown editing interface. | `03-modules/editor/` | Approved / Frozen (v1.0) | Notes, Wiki Links |
+| **Wiki Links** | Manages bidirectional linking between content. | `03-modules/wiki-links/` | Approved / Frozen (v1.0) | Notes, Backlinks |
+| **Backlinks** | Derives and displays reverse link relationships. | `03-modules/backlinks/` | Approved / Frozen (v1.0) | Wiki Links, Notes |
+| **Attachments** | Handles binary file storage and metadata. | `03-modules/attachments/` | Approved / Frozen (v1.0) | Notes, Search |
+| **Tags** | Provides flat, non-hierarchical categorization. | `03-modules/tags/` | Approved / Frozen (v1.0) | Notes, Search |
+| **Search** | Full-Text Search (FTS) and hybrid retrieval. | `03-modules/search/` | Approved / Frozen (v1.0) | Notes, Tags, AI |
+| **OCR** | Optical Character Recognition for attachments. | `03-modules/ocr/` | Approved / Frozen (v1.0) | Attachments, Search |
+| **Embeddings** | Vector embeddings generation and retrieval. | `03-modules/embeddings/` | Approved / Frozen (v1.0) | Notes, AI |
+| **AI** | Local LLM interactions, RAG, and embeddings. | `03-modules/ai/` | Approved / Frozen (v1.0) | Search, Notes |
+| **Todos** | Task extraction and tracking from within Notes. | `03-modules/todos/` | Approved / Frozen (v1.0) | Notes |
+| **Synchronization** | Peer-to-peer or cloud sync (e.g., Google Drive). | `03-modules/sync/` | Approved / Frozen (v1.0) | Workspace, Backup |
+| **Backup** | Point-in-time local automated backups. | `03-modules/backup/` | Approved / Frozen (v1.0) | Workspace, Sync |
+| **Import / Export** | Data migration into and out of Notebook. | `03-modules/import-export/` | Approved / Frozen (v1.0) | Workspace |
+| **Plugins** | Extensibility management and execution. | `03-modules/plugins/` | Approved / Frozen (v1.0) | Settings |
+| **Settings** | Application and Workspace-level configurations. | `03-modules/settings/` | Approved / Frozen (v1.0) | Workspace |
+| **Notifications** | System alerts, toasts, and background job statuses. | `03-modules/notifications/` | Approved / Frozen (v1.0) | Workspace |
 
 ---
 

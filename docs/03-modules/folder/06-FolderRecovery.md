@@ -2,11 +2,9 @@
 
 > **Document Type:** Module Specification
 > **Module:** folder
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [02-FolderHierarchy.md](./02-FolderHierarchy.md) · [../workspace/07-WorkspaceRecovery.md](../workspace/07-WorkspaceRecovery.md)
+> **Architecture Review:** Approved
 
 ---
 

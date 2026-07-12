@@ -1,8 +1,9 @@
 # 07 — Synchronization Events
 
 > **Module:** Synchronization (Sync)
-> **Status:** Approved
-> **Applies To:** Notebook Application
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 
 ---
 

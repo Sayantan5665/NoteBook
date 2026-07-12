@@ -2,11 +2,9 @@
 
 > **Document Type:** Module Specification
 > **Module:** workspace
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [README.md](./README.md) · [../../01-architecture/09-EventBus.md](../../01-architecture/09-EventBus.md)
+> **Architecture Review:** Approved
 
 ---
 

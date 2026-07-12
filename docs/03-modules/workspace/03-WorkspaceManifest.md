@@ -2,11 +2,9 @@
 
 > **Document Type:** Module Specification
 > **Module:** workspace
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [README.md](./README.md) · [../../01-architecture/15-WorkspaceManifest.md](../../01-architecture/15-WorkspaceManifest.md) · [../../01-architecture/ADR-010-WorkspaceManifest.md](../../01-architecture/ADR-010-WorkspaceManifest.md)
+> **Architecture Review:** Approved
 
 ---
 

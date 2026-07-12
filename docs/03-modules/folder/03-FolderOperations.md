@@ -2,11 +2,9 @@
 
 > **Document Type:** Module Specification
 > **Module:** folder
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [01-FolderLifecycle.md](./01-FolderLifecycle.md) · [04-FolderValidation.md](./04-FolderValidation.md)
+> **Architecture Review:** Approved
 
 ---
 

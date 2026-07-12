@@ -2,11 +2,9 @@
 
 > **Document Type:** Module Specification
 > **Module:** workspace
-> **Status:** Draft
+> **Status:** Frozen
 > **Version:** 1.0
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [README.md](./README.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md)
+> **Architecture Review:** Approved
 
 ---
 

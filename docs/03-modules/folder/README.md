@@ -2,10 +2,9 @@
 
 > **Document Type:** Module README
 > **Module:** folder
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../workspace/README.md](../workspace/README.md) · [../notes/README.md](../notes/README.md)
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 
 ---
 
