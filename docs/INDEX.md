@@ -92,7 +92,11 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Actionable guide for developers writing the code.
   - **Contents:** Repository setup, workflow, checklists, specific implementation guidelines.
   - **When to reference:** Onboarding, writing features, or reviewing code.
-- **`10-development/`**
+- **`10-operations-maintenance/`**
+  - **Purpose:** Long-term operation, maintenance, and evolution guidelines.
+  - **Contents:** System health, incident management, backups, data recovery, end of life policies.
+  - **When to reference:** Responding to incidents, maintaining security, or evolving the architecture post-launch.
+- **`11-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
