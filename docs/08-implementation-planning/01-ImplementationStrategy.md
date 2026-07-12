@@ -31,6 +31,18 @@ The Implementation Strategy outlines the overarching philosophy guiding the soft
 ### 2.5 Backward Compatibility
 - Once the schema hits v1.0, any incremental implementation in subsequent phases must preserve data integrity. Migration scripts must be developed alongside the feature that necessitates them.
 
+### 2.6 Implementation Lifecycle
+The conceptual lifecycle governing the creation of the application is:
+`Architecture` → `Planning` → `Implementation` → `Testing` → `Release` → `Operations` → `Continuous Improvement`
+
+- **Architecture:** Defines the boundaries.
+- **Planning:** Organizes the work (Phase 8).
+- **Implementation:** Executes the code (Phase 9).
+- **Testing:** Validates the implementation.
+- **Release:** Publishes the artifact.
+- **Operations:** Maintains the live system (Phase 10).
+- **Continuous Improvement:** Feeds back into Architecture.
+
 ---
 
 ## 3. Business Rules

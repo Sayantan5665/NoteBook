@@ -26,6 +26,29 @@ Continuous Improvement defines how the project systematically learns from mistak
 - Maintainers must actively solicit feedback on the Plugin SDK from developers to improve ergonomics.
 - User feedback guides feature prioritization, provided it aligns with the core architectural philosophy.
 
+### 2.4 Evolution Governance
+Future evolution must continue respecting:
+- Architecture Decision Records
+- Module ownership
+- Canonical Notebook entities
+- Offline-first philosophy
+- Local-first philosophy
+- Privacy-first philosophy
+
+### 2.5 Version Evolution
+Future major versions begin with a strict lifecycle:
+`Architecture Review` → `ADR` → `Planning` → `Implementation` → `Testing` → `Release`
+- Maintainers must avoid uncontrolled feature expansion. Every major addition must reset to the architectural drawing board.
+
+### 2.6 Technical Debt Lifecycle
+The conceptual lifecycle for managing technical debt is:
+`Identification` → `Assessment` → `Prioritization` → `Resolution` → `Verification`
+
+### 2.7 Operational Feedback Loop
+The conceptual feedback cycle continuously feeds maintenance into future design:
+`Operations` → `Monitoring` → `Lessons Learned` → `Architecture Review` → `Planning` → `Future Evolution`
+- Operational experience continuously improves future versions.
+
 ---
 
 ## 3. Final Project Governance

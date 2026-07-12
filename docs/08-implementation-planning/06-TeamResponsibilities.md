@@ -40,6 +40,13 @@ The Team Responsibilities document conceptually maps domains of work to distinct
 ### 2.8 Release (Governance)
 - Owns the deployment validation, version tagging, and publishing of binaries.
 
+### 2.9 Cross-Phase Ownership
+While teams execute the work, the documentation phases establish independent domains of governance:
+- **Phase 8** owns implementation planning.
+- **Phase 9** owns implementation guidance.
+- **Phase 10** owns long-term operational governance.
+- These responsibilities remain strictly independent across the lifecycle.
+
 ---
 
 ## 3. Business Rules

@@ -41,6 +41,12 @@ The Development Workflow document establishes the conceptual, step-by-step lifec
 ### 2.7 Release
 - The merged feature is packaged into a Release Candidate, validated against deployment criteria, and published.
 
+### 2.8 Project Lifecycle Philosophy
+The broader conceptual lifecycle of the Notebook application is:
+`Idea` → `Architecture` → `Implementation` → `Release` → `Maintenance` → `Evolution`
+
+- Architecture continues governing the project throughout its entire lifecycle.
+
 ---
 
 ## 3. Visual Workflow

@@ -26,6 +26,10 @@ The Documentation Maintenance policy ensures that the `docs/` repository remains
 ### 2.3 Cross-Reference Validation
 - When modules are deprecated or renamed, all internal hyperlinks within the `docs/` folder must be audited and updated to prevent dead links.
 
+### 2.4 Documentation Governance
+- Architectural changes require synchronized updates to all affected documentation.
+- Documentation should evolve as a coordinated system rather than independent documents.
+
 ---
 
 ## 3. Responsibilities
