@@ -1,102 +1,67 @@
 # Import / Export Module
 
-> **Document Type:** Module README
-> **Module:** import-export
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §15](../../00-overview/04-FunctionalRequirements.md) · [../../00-overview/04-FunctionalRequirements.md §16](../../00-overview/04-FunctionalRequirements.md) · [../../00-overview/03-Scope.md](../../00-overview/03-Scope.md) · [../notes/README.md](../notes/README.md) · [../attachments/README.md](../attachments/README.md) · [../plugins/README.md](../plugins/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> **Module:** Import / Export
+> **Status:** Approved
+> **Applies To:** Notebook Application
 
 ---
 
-## Purpose
+## 1. Purpose
 
-The Import / Export module defines how content is moved into and out of Notebook in standard, open formats. It ensures that user data is never locked inside Notebook — notes can always be exported to Markdown, and Markdown files from other tools can always be imported.
-
-Import and export are the user's guarantee of data portability. Unlike sync (which replicates the Workspace) and backup (which archives the Workspace), import/export translates between Notebook's internal format and open standards.
+The Import / Export module bridges the gap between the isolated Notebook ecosystem and the external world. It ensures that users can bring existing data into their Workspace and extract their Notebook data into portable formats, preventing vendor lock-in.
 
 ---
 
-## Scope
+## 2. Scope
 
-**This module covers:**
-- Importing individual Markdown files (`.md`) as notes
-- Importing individual plain text files (`.txt`) as notes
-- Bulk importing a directory of Markdown or text files
-- Title extraction from file name or YAML front matter
-- Exporting individual notes as Markdown files
-- Exporting individual notes as plain text files
-- Exporting an entire Workspace as a directory of Markdown files, preserving folder hierarchy
-- Formatting preservation on export (headings, lists, tables, bold, italic, code blocks)
-- Plugin extension points for additional import/export formats
+**In Scope:**
+- Orchestration of data conversion into Notebook entities (Import).
+- Orchestration of data conversion from Notebook entities to derived artifacts (Export).
+- Rigorous validation of inbound and outbound data.
+- Management of Import/Export sessions and extension points for various file formats.
 
-**This module does NOT cover:**
-- Workspace archive backup/restore (see `backup/`)
-- Google Drive sync (see `sync/`)
-- PDF export (plugin-provided)
-- HTML export (plugin-provided)
-- Notion, Evernote, Obsidian import (plugin-provided)
+**Out of Scope:**
+- Live synchronization of data (handled by Sync module).
+- Direct mutation of canonical data without Domain Service validation.
+- Implementation details of specific format parsers (e.g., Markdown vs. HTML parsing).
 
 ---
 
-## Responsibilities
+## 3. Ownership and Responsibilities
 
-This module is responsible for:
-
-- Reading source files from the local filesystem for import
-- Converting Markdown and plain text input to Tiptap JSON for storage
-- Creating `notes` rows for each imported file with correct title and content
-- Serializing Tiptap JSON to standard Markdown for export
-- Writing exported files to a user-selected local directory
-- Preserving the Workspace folder hierarchy as subdirectory structure in exports
-- Providing extension points for plugin-contributed import and export format handlers
+- **The module owns:** Import coordination, Export coordination, Validation, and Artifact generation.
+- **The module does NOT own:** Workspace, Notes, Attachments, OCR, Search, Embeddings, AI, Synchronization, or Backup.
+- **Notebook entities remain canonical.** The module serves as a translator, never an owner.
 
 ---
 
-## Planned Specification Documents
+## 4. Dependencies
 
-| File | Status | Content |
-|---|---|---|
-| `01-MarkdownImport.md` | Planned | Single file and bulk directory import, title extraction, content conversion |
-| `02-WorkspaceExport.md` | Planned | Full Workspace Markdown export, folder hierarchy preservation, file naming |
-| `03-NoteExport.md` | Planned | Single note export to Markdown and plain text |
-| `04-PluginFormats.md` | Planned | Extension point API for plugin-contributed import/export formats |
-| `05-ImportConflictHandling.md` | Planned | Duplicate title handling, conflict options on bulk import |
+- **Domain Services:** For creating imported notes and retrieving notes to export.
+- **Event Bus:** For broadcasting lifecycle events.
+- **Extension Providers:** For actual format conversion (e.g., Markdown to internal TipTap JSON).
 
 ---
 
-## Key Business Rules (Summary)
+## 5. Business Rules
 
-- Import always creates new notes — it never overwrites existing notes without user confirmation.
-- A note title is derived from YAML front matter `title:` field if present; otherwise from the filename (without extension).
-- Export preserves all formatting elements that have a standard Markdown representation. Elements without a Markdown equivalent (e.g., custom editor nodes) are serialized as their closest Markdown approximation or omitted with a comment.
-- Exported Markdown files use the note UUID as part of the filename to prevent collisions when two notes have the same title.
-- Import does not automatically trigger embedding generation — the embedding pipeline handles newly created notes through the standard `NoteCreatedEvent`.
-- Import progress is shown for bulk directory imports; the user is informed of any files that could not be parsed.
+- **Import converts external data into Notebook entities.** Imported data becomes Notebook data only after successful validation.
+- **Export converts Notebook entities into external artifacts.** Export artifacts are derived artifacts.
+- **Import and Export never become owners of Notebook entities.**
+- **Notebook remains the canonical source of truth.**
 
 ---
 
-## Requirements Traced
+## 6. Acceptance Criteria
 
-| Requirement | Description |
-|---|---|
-| FR-IMP-01 | Import Markdown files as notes |
-| FR-IMP-02 | Import plain text files as notes |
-| FR-IMP-03 | Preserve note titles from file name or front matter |
-| FR-IMP-04 | Bulk import a directory of files |
-| FR-IMP-05 | Plugin system may add additional import formats |
-| FR-EXP-01 | Export notes as Markdown |
-| FR-EXP-02 | Export notes as plain text |
-| FR-EXP-03 | Export entire Workspace as Markdown, preserving folder hierarchy |
-| FR-EXP-04 | Exported Markdown preserves formatting |
-| FR-EXP-05 | Plugin system may add additional export formats |
+- Importing a directory of Markdown files successfully creates corresponding Note entities via Domain Services.
+- Exporting a Note successfully generates a standalone artifact without altering the original Note.
+- The system safely rejects and aborts imports of corrupted or unsupported files.
 
 ---
 
-## Future Considerations
+## 7. Cross References
 
-- **Notion import plugin:** Importing from a Notion export ZIP (which produces Markdown + HTML). This is a plugin concern per FR-IMP-05.
-- **Obsidian vault import plugin:** Importing an Obsidian vault (Markdown with `[[wiki links]]`). Wiki link format compatibility is a key consideration.
-- **PDF export plugin:** Exporting individual notes as styled PDFs. Platform-specific rendering (Chromium print-to-PDF via Electron) makes this a natural plugin candidate.
-- **Roam Research, Logseq import plugins:** Community-requested import formats from competing tools.
-- **Re-import and merge:** Importing a previously exported Notebook Markdown export back into Notebook, detecting already-existing notes by UUID embedded in the filename and merging changes.
+- [01-ImportOverview.md](./01-ImportOverview.md)
+- [02-ExportOverview.md](./02-ExportOverview.md)
+- [07-ImportExportGovernance.md](./07-ImportExportGovernance.md)

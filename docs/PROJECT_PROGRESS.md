@@ -41,6 +41,9 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ Todos Module Frozen
 - ✔ Synchronization Module Frozen (v1.0)
 - ✔ Backup Module Frozen (v1.0)
+- ✔ Import / Export Module Frozen (v1.0)
+- ✔ Settings Module Frozen (v1.0)
+- ✔ Notifications Module Frozen (v1.0)
 
 **Next Module:** Notes
 
@@ -99,10 +102,10 @@ It is designed to help both human developers and AI coding agents quickly know:
 | **Todos** | Complete | Approved | Yes |
 | **Synchronization** | Complete | Approved | Yes (v1.0) |
 | **Backup** | Complete | Approved | Yes (v1.0) |
-| **Import / Export** | Pending | Pending | No |
+| **Import / Export** | Complete | Approved | Yes (v1.0) |
 | **Plugins** | Pending | Pending | No |
-| **Settings** | Pending | Pending | No |
-| **Notifications** | Pending | Pending | No |
+| **Settings** | Complete | Approved | Yes (v1.0) |
+| **Notifications** | Complete | Approved | Yes (v1.0) |
 
 ### Phase 4 – AI Design
 - **Status:** Not Started
