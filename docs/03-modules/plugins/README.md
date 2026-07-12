@@ -1,115 +1,77 @@
-# Plugins Module
+# Plugin SDK & Extension System
 
-> **Document Type:** Module README
-> **Module:** plugins
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §18](../../00-overview/04-FunctionalRequirements.md) · [../../01-architecture/10-PluginArchitecture.md](../../01-architecture/10-PluginArchitecture.md) · [../../02-database/04-Schema.md §3.13](../../02-database/04-Schema.md) · [../settings/README.md](../settings/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> **Module:** Plugins
+> **Status:** Approved
+> **Applies To:** Notebook Application
 
 ---
 
-## Purpose
+## 1. Purpose
 
-The Plugins module defines the user-facing behavior of Notebook's plugin system — how plugins are installed, enabled, disabled, configured, and removed. It also defines the functional extension points that plugins may contribute to.
-
-Plugins allow first-party and third-party developers to extend Notebook without modifying the core application. The plugin system is the mechanism through which alternative AI providers, sync providers, OCR engines, content importers, content exporters, and editor extensions are contributed.
-
-This module does not define the Plugin SDK API — that belongs in `docs/sdk/`. This module defines what the plugin system does from the user's and application's perspective.
+The Plugin SDK & Extension System provides a secure, governed framework for extending the capabilities of the Notebook application without altering its core architecture. It enables third-party developers and advanced users to integrate custom behaviors, formats, and providers.
 
 ---
 
-## Scope
+## 2. Scope
 
-**This module covers:**
-- Plugin installation from the local filesystem
-- Plugin manifest validation (declaration of capabilities and permissions)
-- Displaying required permissions to the user before installation confirmation
-- Enabling and disabling installed plugins without application restart (where feasible)
-- Removing/uninstalling plugins
-- The plugin management UI (installed plugins list, enable/disable, configuration)
-- Plugin configuration storage (`plugin_configurations` table)
-- Plugin extension points: what plugins can contribute and what contracts they must satisfy
-- Plugin isolation: preventing a misbehaving plugin from crashing the core application
-- Plugin update behavior
+**In Scope:**
+- Defining the lifecycle of a Plugin (Discovery, Validation, Activation).
+- Defining the permissions and capability model.
+- Managing the registration and exposure of stable Extension Points.
+- Broadcasting plugin-related lifecycle events.
 
-**This module does NOT cover:**
-- Plugin SDK and developer API surface (documented in `docs/sdk/`)
-- Remote plugin repositories (future consideration)
-- Specific plugin implementations (each plugin is its own concern)
+**Out of Scope:**
+- Implementation details of a plugin marketplace or package manager.
+- Low-level sandboxing technologies (e.g., IPC, V8 Isolates).
+- Actual execution of domain logic—the Plugin SDK coordinates the *integration* of plugins, but the Domain handles the *data*.
 
 ---
 
-## Responsibilities
+## 3. Ownership and Responsibilities
 
-This module is responsible for:
-
-- Discovering and loading plugin manifests at application startup
-- Validating plugin manifests against the required schema
-- Displaying permission prompts to the user on first installation
-- Registering plugin-contributed providers and extensions with the relevant subsystems
-- Persisting plugin configuration in `plugin_configurations` table
-- Unloading plugin contributions when a plugin is disabled or removed
-- Enforcing plugin sandbox constraints to prevent unauthorized access
+- **The module owns:** Plugin lifecycle, Plugin validation, Extension point registration, Plugin permissions, and SDK compatibility.
+- **The module does NOT own:** Workspace, Notes, Editor, Attachments, OCR, Search, Embeddings, AI Assistant, Synchronization, Backup, Import/Export, Settings, Notifications, or Todos.
+- **Plugins extend Notebook capabilities.** They never become owners of Notebook entities.
 
 ---
 
-## Planned Specification Documents
+## 4. Dependencies
 
-| File | Status | Content |
-|---|---|---|
-| `01-PluginLifecycle.md` | Planned | Install, enable, disable, remove, update workflows |
-| `02-PluginPermissions.md` | Planned | Permission model, permission declaration, user consent flow |
-| `03-ExtensionPoints.md` | Planned | Complete inventory of plugin extension points (AI, sync, OCR, import, export, editor, theme) |
-| `04-PluginConfiguration.md` | Planned | Plugin settings storage, configuration schema, settings UI integration |
-| `05-PluginIsolation.md` | Planned | Sandbox model, error boundary, plugin crash handling |
+- **Event Bus:** For notifying the core application about new extension points being registered or plugins failing.
+- **Settings Module:** For storing user preferences related to installed plugins (e.g., enabling/disabling a plugin).
 
 ---
 
-## Key Business Rules (Summary)
+## 5. Interfaces
 
-- Plugins are installed from the local filesystem only. Remote plugin repositories are not supported in V1.
-- A plugin's declared permissions are displayed to the user before installation. Installation cannot proceed without explicit user acknowledgment.
-- Disabling a plugin removes its contributions from all extension points without restarting the application, where technically feasible. If restart is required, the user is informed.
-- A plugin crash or exception must not crash or corrupt the core application.
-- Plugin configuration is stored in `plugin_configurations` (Workspace-scoped). Plugins do not have access to global application state.
-- Removing a plugin also removes its configuration from the `plugin_configurations` table.
-- Plugins communicate only through published extension interfaces. They have no direct access to the database, filesystem, or IPC bridge.
+### 5.1 Consumed Interfaces
+- Module APIs exposing Extension Points (e.g., `ISyncProviderRegistry`).
+
+### 5.2 Published Interfaces
+- The `Plugin SDK` API itself, consumed by the actual Plugin Packages.
 
 ---
 
-## Extension Points (Summary)
+## 6. Business Rules
 
-| Extension Point | Description |
-|---|---|
-| `IAiProvider` | Alternative AI inference provider (e.g., OpenAI-compatible API) |
-| `IEmbeddingProvider` | Alternative embedding model provider |
-| `ISyncProvider` | Alternative sync target (iCloud, Dropbox, etc.) |
-| `IOcrProvider` | Alternative OCR engine |
-| `IContentImporter` | Additional import formats (Notion, Evernote, Obsidian) |
-| `IContentExporter` | Additional export formats (PDF, HTML, JSON) |
-| `ITiptapExtension` | Custom Tiptap editor nodes and marks |
-| `ITheme` | Application UI themes |
+- **Plugins are optional.** Notebook Core remains fully functional without plugins.
+- **Plugins never own Notebook entities.** Notebook Core always remains the canonical owner.
+- **Plugins communicate only through approved extension points.** They never bypass module ownership boundaries.
+- **Plugin failures never corrupt Notebook data.**
+- **Permissions are user controlled.**
 
 ---
 
-## Requirements Traced
+## 7. Acceptance Criteria
 
-| Requirement | Description |
-|---|---|
-| FR-PLG-01 | Plugin system enabling functional extension |
-| FR-PLG-02 | Extension points for AI, sync, OCR, import, export, editor, themes |
-| FR-PLG-03 | Plugin management UI: view, enable, disable, remove |
-| FR-PLG-04 | Install from local filesystem |
-| FR-PLG-05 | Load/unload without application restart where feasible |
-| FR-PLG-06 | Declare and display permissions before installation |
-| FR-PLG-07 | Plugin SDK documented in `docs/sdk/` |
+- A user can launch the Notebook application in "Safe Mode" where the Plugin SDK bypasses initialization, proving that the core application functions independently.
+- A plugin attempting to write directly to the SQLite database without using the Domain Service Extension Points is structurally blocked or rejected.
 
 ---
 
-## Future Considerations
+## 8. Cross References
 
-- **Remote plugin repository:** A curated directory of reviewed plugins installable via the UI, similar to VS Code's extension marketplace. Requires security review infrastructure.
-- **Plugin versioning and updates:** Checking for and applying plugin updates, with changelog display.
-- **Plugin sandboxing (Node.js vm module or separate process):** Stronger isolation of plugin execution to prevent memory leaks and unauthorized API access.
-- **Plugin signing:** Cryptographic signing of plugin packages to verify authenticity before installation.
+- [01-PluginOverview.md](./01-PluginOverview.md)
+- [03-ExtensionPoints.md](./03-ExtensionPoints.md)
+- [04-PermissionsAndSecurity.md](./04-PermissionsAndSecurity.md)
+- [07-PluginGovernance.md](./07-PluginGovernance.md)
