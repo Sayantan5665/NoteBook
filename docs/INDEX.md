@@ -88,7 +88,11 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Strategy and roadmap for building the application.
   - **Contents:** Implementation strategy, module order, dependency graphs, checklists.
   - **When to reference:** Deciding what to build next or checking go-live readiness.
-- **`09-development/`**
+- **`09-implementation-playbook/`**
+  - **Purpose:** Actionable guide for developers writing the code.
+  - **Contents:** Repository setup, workflow, checklists, specific implementation guidelines.
+  - **When to reference:** Onboarding, writing features, or reviewing code.
+- **`10-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
