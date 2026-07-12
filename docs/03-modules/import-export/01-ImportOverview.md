@@ -22,9 +22,11 @@ The Import Overview details how external data is safely ingested into the Notebo
 
 ## 3. Conceptual Identities
 
+- **Import Source:** Represents external data coming into the ecosystem.
 - **Import Request:** Initiates the import process, specifying the source data and format.
 - **Import Session:** Coordinates a single import operation.
-- **Imported Artifact:** The raw, temporary external data before it is converted.
+- **Imported Artifact:** The raw, temporary external data before it is converted. Imported Artifacts are transformed into Notebook entities only after successful validation.
+- **Notebook Entity:** The canonical representation of the data within the system.
 - **Import Result:** The final status (Success, Failure, Cancelled, Partial Success).
 
 ---
@@ -61,7 +63,10 @@ If conversion or validation fails, the Import Session aborts safely. No corrupte
 ## 6. Business Rules
 
 - **Invalid imports never become Notebook data.**
-- **Notebook remains the canonical source of truth.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

@@ -16,6 +16,7 @@ The Settings Validation document defines the safeguards protecting the applicati
 
 - **Invalid settings are rejected safely.** A bad setting must never crash the application.
 - **Settings validation protects application stability.** By ensuring types and bounds are respected, consumer modules can trust the values they read.
+- **Schema Evolution:** Settings schemas may evolve over time. Validation preserves compatibility across versions by migrating outdated keys safely or falling back to defaults.
 
 ---
 

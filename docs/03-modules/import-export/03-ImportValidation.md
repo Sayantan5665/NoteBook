@@ -16,6 +16,7 @@ The Import Validation document defines the safeguards that prevent corrupted, ma
 
 - **Validation protects Notebook integrity.** The application trusts no external data by default.
 - **Invalid imports never become Notebook data.** An import must pass all checks before being handed to the Domain.
+- **Partial Acceptance (Future):** Future import strategies may support partial acceptance of valid data while safely rejecting invalid portions.
 
 ---
 

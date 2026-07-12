@@ -23,7 +23,7 @@ The Extension Points document defines how the module supports a variety of data 
 - **Future Custom Formats:** E.g., `.docx` or ePub.
 
 ### 2.2 Future Interoperability
-- **Future Migration Tools:** Dedicated plugins to import from specific competitors (Notion, Obsidian, Roam).
+- **Future Migration Tools:** Dedicated plugins to import from specific competitors (Notion, Obsidian, Roam). Import / Export may support future migration between Notebook versions and external knowledge management systems. Migration extends Import / Export capabilities, but Migration never changes Notebook ownership.
 - **Future Interoperability Providers:** Plugins that map foreign schemas to the Notebook Domain schema.
 
 ---

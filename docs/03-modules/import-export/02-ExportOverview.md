@@ -24,7 +24,8 @@ The Export Overview details how canonical Notebook entities are safely extracted
 
 - **Export Request:** Initiates the export process, specifying the target format and scope (e.g., single Note vs. entire Folder).
 - **Export Session:** Coordinates a single export operation.
-- **Export Artifact:** The final derived file (e.g., `.md` or `.zip`).
+- **Notebook Entity:** The canonical source from which the export is derived.
+- **Export Artifact:** Immutable point-in-time snapshots derived from Notebook entities. Export Artifacts never become Notebook entities.
 - **Export Result:** The final status (Success, Failure, Cancelled).
 
 ---
@@ -60,6 +61,10 @@ If writing to the destination fails (e.g., permissions error), the Export Sessio
 
 - **Invalid exports are cancelled safely.**
 - **Export never modifies Notebook data.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

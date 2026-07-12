@@ -45,7 +45,10 @@ The Governance document defines the strict ownership boundaries and responsibili
 
 - **Import converts external data into Notebook entities.**
 - **Export converts Notebook entities into external artifacts.**
-- **Notebook remains the canonical source of truth.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

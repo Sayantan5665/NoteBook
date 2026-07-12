@@ -42,6 +42,10 @@ The Governance document defines the strict ownership boundaries for the Settings
 - **Settings configure Notebook behavior.**
 - **Settings never become Notebook content.**
 - **Settings influence module behavior without owning modules.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

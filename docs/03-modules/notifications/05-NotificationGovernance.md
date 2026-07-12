@@ -43,7 +43,11 @@ The Governance document defines the strict boundaries of the Notifications modul
 
 - **Notifications communicate information to users.**
 - **Notifications never own business logic.**
-- **Notifications never become Notebook entities.**
+- **Notifications are ephemeral communication artifacts.** Future versions may optionally provide notification history, but notifications never become Notebook entities.
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

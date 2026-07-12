@@ -22,8 +22,11 @@ The Settings Overview details how the application manages user preferences while
 
 ## 3. Conceptual Identities
 
-- **Setting:** A specific configuration key-value pair (e.g., `theme: 'dark'`).
-- **Setting Category:** A logical grouping of related settings.
+- **Setting:** A specific configuration key-value pair defining behavior (e.g., `theme: 'dark'`).
+- **Preference:** The user's specific choice or override for a Setting.
+- **Configuration:** The holistic collection of all settings and preferences.
+- **Setting Category:** A logical grouping of related settings to organize configurations.
+- **Workspace Settings:** Scoped configurations that apply only to a specific active Workspace, overriding application-wide settings.
 - **Setting Change:** A request to mutate a Setting value.
 - **Setting Validation:** The process of ensuring a Setting Change is within allowed bounds.
 - **Setting Result:** The outcome (Success/Failure) of attempting a Setting Change.
@@ -35,6 +38,10 @@ The Settings Overview details how the application manages user preferences while
 - **Settings never become Notebook content.**
 - **Settings configure Notebook behavior.**
 - **Invalid settings are rejected safely.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

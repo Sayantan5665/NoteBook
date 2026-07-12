@@ -15,7 +15,7 @@ The Notification Lifecycle defines the sequential states a notification passes t
 ## 2. Lifecycle Phases
 
 ### 2.1 Creation
-A module dispatches a Notification Request. The Notification module creates a tracked instance in memory.
+A module dispatches a Notification Request with an assigned priority (e.g., Information, Warning, Error, Critical). Priorities guide delivery behavior (e.g., Critical alerts bypass queues). The Notification module creates a tracked instance in memory.
 
 ### 2.2 Queueing (Conceptual)
 If multiple notifications arrive rapidly, they are queued to prevent overwhelming the user. The system may collapse duplicate messages.
@@ -66,13 +66,19 @@ stateDiagram-v2
 
 ---
 
-## 5. Acceptance Criteria
+## 5. Future Enhancements
+
+- **Notification Deduplication:** Conceptually, notification systems may suppress duplicate notifications to reduce user fatigue while preserving important information.
+
+---
+
+## 6. Acceptance Criteria
 
 - A "Sync Success" notification auto-expires after 5 seconds.
 - A "Sync Failed" error notification requires manual Dismissal or Acknowledgement.
 
 ---
 
-## 6. Cross References
+## 7. Cross References
 
 - [03-NotificationChannels.md](./03-NotificationChannels.md)

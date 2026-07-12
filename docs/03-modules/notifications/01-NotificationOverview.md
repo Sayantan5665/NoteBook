@@ -23,8 +23,9 @@ The Notification Overview establishes the conceptual definitions and boundaries 
 ## 3. Conceptual Identities
 
 - **Notification Request:** A payload sent by a module asking for user attention (contains title, message, severity, and optional actions).
-- **Notification:** The instantiated object managed by the Notification module.
+- **Notification:** The instantiated object managed by the Notification module representing the alert.
 - **Notification Delivery:** The act of pushing the Notification through a specific Channel (e.g., popping up a toast).
+- **Notification Acknowledgement:** The user explicitly interacting with or acknowledging the notification, effectively closing its lifecycle.
 - **Notification Result:** The outcome of the delivery (e.g., Clicked, Dismissed, Expired).
 
 ---
@@ -34,6 +35,10 @@ The Notification Overview establishes the conceptual definitions and boundaries 
 - **Notifications communicate information to users.**
 - **Notifications never own business logic.**
 - **Notifications never become Notebook entities.**
+- **Notebook entities remain the canonical source of truth.**
+- **Infrastructure modules coordinate processing.**
+- **Derived artifacts never replace Notebook entities.**
+- **Ownership never transfers.**
 
 ---
 

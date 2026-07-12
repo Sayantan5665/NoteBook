@@ -15,7 +15,8 @@ The Settings Categories document defines the taxonomy used to organize configura
 ## 2. Category Philosophy
 
 - **Categories organize settings.** They provide a namespace to prevent key collisions (e.g., `editor.font_size` vs `ui.font_size`).
-- **Categories do not own functionality.** They are purely structural mapping constructs. 
+- **Categories do not own functionality.** They are purely structural mapping constructs.
+- **Settings Scopes:** Settings may exist at different scopes, such as application-wide settings and workspace-specific settings. Validation determines the applicability of a setting based on its defined scope. 
 
 ---
 
