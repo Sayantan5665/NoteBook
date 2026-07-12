@@ -22,7 +22,15 @@ Covers rollback philosophy, failure recovery during installation, version recove
 
 ## 3. Conceptual Strategy
 
-### 3.1 Rollback Philosophy
+### 3.1 Compatibility & Recovery Philosophy
+The conceptual relationship between version changes and data safety is defined as:
+`Compatibility` → `Migration` → `Rollback` → `Recovery`
+
+- **Recovery** protects user data.
+- **Rollback** restores application stability.
+- **Migration** preserves compatibility where applicable.
+
+### 3.2 Rollback Philosophy
 - The safest rollback is one that never has to touch the user's data. If an application upgrade fails, restoring the previous binary should immediately restore application function.
 
 ### 3.2 Failure Recovery (Mid-Install)

@@ -1,7 +1,9 @@
 # 12 — Test Governance
 
 > **Module:** Testing & Quality Assurance
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -15,8 +17,15 @@ The Test Governance document outlines how testing practices are managed, audited
 ## 2. Ownership and Responsibilities
 
 - **Module Owners:** The engineering team owning a specific module (e.g., Search) is responsible for the quality, unit tests, and integration tests of that module.
-- **QA/Test Architects:** Responsible for the overall Testing Strategy, E2E automation frameworks, performance testing baselines, and test data management.
+- **QA/Test Architects:** Responsible for the overall Testing Strategy, E2E automation frameworks, performance testing baselines, and test data management. Testing owns verification.
 - **Security Team:** Responsible for defining security testing boundaries and validating the plugin sandbox.
+
+### 2.1 Quality Ownership
+- **Testing** owns verification.
+- **Implementation Teams** own implementation quality.
+- **Release Governance** owns release approval.
+- **Architecture** remains governed by approved architectural documentation.
+- Ownership boundaries remain unchanged across these lifecycle stages.
 
 ---
 

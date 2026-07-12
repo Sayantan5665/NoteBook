@@ -22,7 +22,15 @@ Covers planning, validation, approval, publishing, and communication of a new so
 
 ## 3. Conceptual Strategy
 
-### 3.1 Release Planning
+### 3.1 Release Readiness Philosophy
+The software release process involves distinct stages of readiness:
+- **Build Complete:** The code compiles and artifacts are generated.
+- **Test Complete:** All automated tests (Unit, Integration, E2E) have passed.
+- **Release Candidate:** A stable build intended for exploratory testing and validation.
+- **Release Ready:** The Release Candidate has passed all Quality Gates and is awaiting approval.
+- **Released Version:** The approved build has been packaged and distributed.
+
+### 3.2 Release Planning
 - Releases are planned based on milestones or semantic versioning goals.
 - A "Release Branch" or "Release Tag" is created to freeze code for the upcoming version, allowing only critical bug fixes.
 

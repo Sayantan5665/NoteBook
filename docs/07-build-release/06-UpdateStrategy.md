@@ -22,7 +22,19 @@ Covers manual updates, automatic updates, migration, compatibility, and failure 
 
 ## 3. Conceptual Strategy
 
-### 3.1 Offline-First Philosophy
+### 3.1 Upgrade Philosophy
+Application upgrades should preserve, where possible:
+- Workspaces
+- Notes
+- Attachments
+- Settings
+- AI Conversations
+- Plugins
+- Backups
+
+Data migrations should preserve canonical Notebook entities. Upgrades should never unnecessarily invalidate user data.
+
+### 3.2 Offline-First Philosophy
 - **No Forced Updates:** Because the app is offline-first, updates are inherently optional. The application will never refuse to launch simply because it is out of date.
 
 ### 3.2 Manual Updates

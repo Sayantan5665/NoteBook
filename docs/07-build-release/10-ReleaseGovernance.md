@@ -23,10 +23,21 @@ Covers ownership, responsibilities, release approvals, audit trails, and the mai
 ## 3. Conceptual Strategy
 
 ### 3.1 Ownership and Responsibilities
-- **Project Lead / Core Maintainers:** Own the final decision to publish a release.
+- **QA / Test Architects:** Testing owns verification.
+- **Project Lead / Core Maintainers:** Release Governance owns release approval.
+- **Implementation Teams:** Implementation teams own implementation quality.
 - **Release Manager:** Responsible for assembling the release notes, tracking QA sign-offs, and staging the artifacts.
+- Architecture remains governed by approved architectural documentation. Ownership boundaries remain unchanged.
 
-### 3.2 Approval Process
+### 3.2 Release Types
+The project defines the following conceptual release categories (not prescribing a specific cadence):
+- **Major Releases:** Breaking changes, major features.
+- **Minor Releases:** Non-breaking features.
+- **Patch Releases:** Routine bug fixes.
+- **Hotfix Releases:** Out-of-band critical fixes.
+- **Long-Term Support (LTS) Releases:** Stable builds maintained for extended periods.
+
+### 3.3 Approval Process
 - A release cannot be published without documented approvals from both QA (for technical quality) and the Project Lead (for feature alignment).
 
 ### 3.3 Audit and Release History

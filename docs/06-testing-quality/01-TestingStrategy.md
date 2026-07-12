@@ -1,7 +1,9 @@
 # 01 — Testing Strategy
 
 > **Module:** Testing & Quality Assurance
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -17,6 +19,15 @@ The Testing Strategy defines the overarching philosophy for validating the Noteb
 - **Shift-Left Testing:** Validation must happen as early as possible in the development lifecycle, starting with unit tests during development and progressing through automated PR checks.
 - **Risk-Based Testing:** Testing effort must be prioritized based on risk. Core data integrity (SQLite interactions) and privacy boundaries (AI communication) require significantly more scrutiny than cosmetic UI features.
 - **Black-Box Over White-Box:** Tests should validate externally observable behavior and domain contracts rather than coupling tightly to internal implementation details.
+
+### 2.1 Quality Gate Philosophy
+The lifecycle from architecture to delivery follows distinct conceptual stages:
+`Architecture` → `Implementation` → `Testing` → `Quality Gates` → `Release Approval` → `Packaging` → `Release`
+
+- **Testing** verifies implementation quality.
+- **Quality Gates** determine release readiness.
+- **Release Approval** authorizes distribution.
+- Each stage has distinct ownership and responsibilities.
 
 ---
 

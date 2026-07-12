@@ -22,7 +22,15 @@ Covers release verification, installer verification, upgrade verification, and r
 
 ## 3. Conceptual Strategy
 
-### 3.1 Release Verification
+### 3.1 Compatibility & Recovery Philosophy
+The conceptual relationship between version changes and data safety is defined as:
+`Compatibility` → `Migration` → `Rollback` → `Recovery`
+
+- **Recovery** protects user data.
+- **Rollback** restores application stability.
+- **Migration** preserves compatibility where applicable.
+
+### 3.2 Release Verification
 - The final signed binaries are tested on clean virtual machines for all supported target operating systems (Windows, macOS, Linux).
 
 ### 3.2 Installer Verification

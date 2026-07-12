@@ -22,7 +22,15 @@ Covers backup migration, restore validation, version compatibility, and cross-ve
 
 ## 3. Conceptual Strategy
 
-### 3.1 Version Compatibility
+### 3.1 Compatibility & Recovery Philosophy
+The conceptual relationship between version changes and data safety is defined as:
+`Compatibility` → `Migration` → `Rollback` → `Recovery`
+
+- **Recovery** protects user data.
+- **Rollback** restores application stability.
+- **Migration** preserves compatibility where applicable.
+
+### 3.2 Version Compatibility
 - Every generated backup artifact (e.g., a `.zip` containing the SQLite database and attachments) must include a clear `version` manifest indicating the application version that created it.
 
 ### 3.2 Backup Migration
