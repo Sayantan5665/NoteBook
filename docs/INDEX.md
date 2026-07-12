@@ -76,7 +76,11 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Engineering standards and implementation guidelines.
   - **Contents:** Architecture principles, coding standards, logging, error handling, security, and Git workflows.
   - **When to reference:** Onboarding, writing code, or performing code reviews.
-- **`06-development/`**
+- **`06-testing-quality/`**
+  - **Purpose:** Testing strategy, quality assurance, and automation guidelines.
+  - **Contents:** Test levels, performance testing, security testing, defect management.
+  - **When to reference:** Planning test coverage or reviewing release quality.
+- **`07-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
