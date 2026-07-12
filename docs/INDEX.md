@@ -64,10 +64,10 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Detailed functional specifications for individual system modules.
   - **Contents:** Folders for Workspace, Notes, Folder, Tags, etc.
   - **When to reference:** Implementing, refactoring, or testing specific features.
-- **`04-ai/`**
-  - **Purpose:** Deep dive into the AI subsystem (Ollama integration, prompt engineering).
-  - **Contents:** Local AI strategy, embedding models, RAG pipelines.
-  - **When to reference:** Working on AI features or understanding local ML execution.
+- **`04-ai-rag/`**
+  - **Purpose:** Deep dive into the AI subsystem, RAG pipelines, and model abstraction.
+  - **Contents:** AI architecture, context assembly, prompt construction, memory, and token budgeting.
+  - **When to reference:** Working on AI features, integrating local models, or understanding context retrieval.
 - **`05-plugin-sdk/`**
   - **Purpose:** Guidelines and specifications for the Plugin ecosystem.
   - **Contents:** Extension points, API contracts, security sandboxing.
