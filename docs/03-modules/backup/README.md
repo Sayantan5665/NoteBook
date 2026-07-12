@@ -1,88 +1,108 @@
-# Backup Module
+# Backup & Restore Module
 
-> **Document Type:** Module README
-> **Module:** backup
-> **Status:** Draft
-> **Applies To:** Notebook — All Versions
-> **Related Documents:**
-> [../../00-overview/04-FunctionalRequirements.md §3 FR-WS-11](../../00-overview/04-FunctionalRequirements.md) · [../../02-database/10-BackupStrategy.md](../../02-database/10-BackupStrategy.md) · [../../02-database/02-StorageLayout.md](../../02-database/02-StorageLayout.md) · [../workspace/README.md](../workspace/README.md) · [../sync/README.md](../sync/README.md) · [../00-ModuleOverview.md](../00-ModuleOverview.md)
+> **Module:** Backup & Restore
+> **Status:** Approved
+> **Applies To:** Notebook Application
 
 ---
 
-## Purpose
+## 1. Purpose
 
-The Backup module defines the user-facing behavior of Notebook's local backup and restore system. It translates the technical backup strategy (documented in `docs/02-database/10-BackupStrategy.md`) into user-facing workflows, UI interactions, and observable behaviors.
-
-Backups protect users from local data loss due to accidental deletion, database corruption, failed migrations, or accidental sync overwrites. A backup is a point-in-time ZIP archive of the entire Workspace stored in the Workspace's own `backups/` directory.
+The Backup & Restore module protects Notebook data by creating, managing, and restoring complete Workspace snapshots. It guarantees that users can recover their data safely in the event of local corruption, accidental deletion, or device failure.
 
 ---
 
-## Scope
+## 2. Scope
 
-**This module covers:**
-- Manual backup creation ("Back Up Now")
-- Scheduled automatic backup configuration and execution
-- Backup archive listing and management UI
-- Backup validation (manifest check, integrity check)
-- Workspace restore from a backup archive
-- Backup retention policy configuration
-- Pre-migration backup (automatic; documented here as user-visible behavior)
-- Pre-sync backup (automatic; described here as it is user-visible on restore)
-- Pre-restore safety backup (automatic before any restore operation)
+**In Scope:**
+- Orchestrating the creation of backup artifacts from a Workspace.
+- Validating backups for integrity before and after creation.
+- Orchestrating the restoration of a Workspace from a backup artifact.
+- Defining extension points for compression, encryption, and off-site backup storage.
 
-**This module does NOT cover:**
-- Google Drive sync (see `sync/`)
-- Workspace export for migration (see `import-export/`)
-- Database integrity check mechanics (see `docs/02-database/10-BackupStrategy.md`)
+**Out of Scope:**
+- Synchronization of live data (handled by the Synchronization module).
+- Direct mutation of canonical domain entities (Notes, Attachments, etc.).
+- Cloud-specific authentication or network transmission protocols.
 
 ---
 
-## Responsibilities
+## 3. Ownership
 
-This module is responsible for:
+The Backup & Restore module **does NOT own** any Notebook entities.
 
-- Triggering backup creation in response to user actions and configured schedules
-- Displaying the list of available backup archives with date, size, and type
-- Guiding the user through the restore workflow with appropriate warnings and confirmations
-- Communicating backup progress and completion status to the user
-- Enforcing retention policies and listing exempt backups (pre-migration, pre-restore)
-- Informing users that local backups are not protected against machine loss (clear limitation statement)
+- The Domain layer (Workspace, Notes, Folders) owns the canonical source of truth.
+- Backup files are purely **derived artifacts**. They represent a historical snapshot of the canonical data.
+- Restored data only becomes canonical Notebook data after it passes successful validation and replaces the active Workspace via the Workspace Manager.
 
 ---
 
-## Planned Specification Documents
+## 4. Responsibilities
 
-| File | Status | Content |
-|---|---|---|
-| `01-BackupCreation.md` | Planned | Manual backup workflow, scheduled backup configuration, backup naming |
-| `02-BackupRestore.md` | Planned | Restore workflow, pre-restore backup, warnings, manifest/integrity validation |
-| `03-BackupManagement.md` | Planned | Backup list UI, retention policy configuration, manual deletion |
-| `04-AutomaticBackups.md` | Planned | Pre-migration, pre-sync, and pre-restore automatic backup behavior |
-
----
-
-## Key Business Rules (Summary)
-
-- The application never creates a backup archive of a database that fails `PRAGMA integrity_check`.
-- A pre-restore safety backup is always created before any restore operation overwrites local data.
-- Pre-migration and pre-restore backups are never automatically deleted by the retention policy.
-- Backup archives in `backups/` are never synced to Google Drive.
-- Manual backup is always available to the user, regardless of backup configuration settings.
-- The user is explicitly informed during setup that local backups do not protect against machine loss.
+- Coordinate backup and recovery operations.
+- Ensure all backup artifacts are strictly validated before they are finalized.
+- Ensure all restored artifacts are strictly validated before they replace a Workspace.
+- Publish lifecycle events (Started, Completed, Failed).
+- Delegate physical storage and transmission to extension providers.
 
 ---
 
-## Requirements Traced
+## 5. Dependencies
 
-| Requirement | Description |
-|---|---|
-| FR-WS-11 | Create a local backup snapshot on demand |
-| FR-WS-12 | Restore a Workspace from a local backup snapshot |
+- **Workspace Manager:** To identify active Workspaces and coordinate the swapping of a Workspace during a restore.
+- **Event Bus:** To broadcast status to the UI and other modules.
+- **Domain Services:** To perform initial integrity checks on the active database.
 
 ---
 
-## Future Considerations
+## 6. Interfaces
 
-- **Incremental backups:** For large Workspaces, full backups are time-consuming. A future incremental backup would only archive changed files. See `docs/02-database/10-BackupStrategy.md §13`.
-- **Backup to external storage:** Allowing users to configure an external directory or mounted drive as the backup destination.
-- **Backup health dashboard:** A status view showing last backup time, backup count, total backup size, and next scheduled backup.
+### 6.1 Consumed Interfaces
+- `IWorkspaceSession`: Access to current Workspace state.
+- `IStorageProvider`: (Conceptual) for writing to the filesystem.
+
+### 6.2 Extension Points
+- `IBackupProvider`: For custom routing of backups (e.g., Cloud, Enterprise, Local).
+- `ICompressionProvider`: For reducing backup artifact size.
+- `IEncryptionProvider`: For securing backups at rest.
+
+---
+
+## 7. Events
+
+### 7.1 Published Events
+- `BackupStarted`, `BackupCompleted`, `BackupCancelled`, `BackupFailed`
+- `RestoreStarted`, `RestoreCompleted`, `RestoreCancelled`, `RestoreFailed`
+- `ValidationSucceeded`, `ValidationFailed`
+
+### 7.2 Consumed Events
+- `WorkspaceOpened`: May trigger an automatic backup check.
+- `WorkspaceClosed`: May trigger a snapshot upon exit.
+- `SynchronizationCompleted`: May trigger a backup of the latest synchronized state.
+
+---
+
+## 8. Business Rules
+
+- **Backup is optional.** The system functions perfectly without it.
+- **Restore requires successful validation.** A corrupt backup artifact must never overwrite a functional Workspace.
+- **Backup artifacts never become Notebook entities.** They are isolated snapshots.
+- **Restore never changes Notebook ownership.** It replaces the underlying data, but the Domain layer still governs the entities.
+- **Failures never corrupt Notebook data.**
+
+---
+
+## 9. Acceptance Criteria
+
+- A Workspace can be backed up to a discrete artifact file without locking the user out of the UI.
+- A corrupted backup artifact is rejected during the Restore Validation phase, leaving the current Workspace intact.
+- A successful restore accurately recreates the exact state of the Notes, Attachments, and Folders from the time of the backup.
+
+---
+
+## 10. Cross References
+
+- [01-BackupOverview.md](./01-BackupOverview.md)
+- [02-BackupLifecycle.md](./02-BackupLifecycle.md)
+- [04-RestoreLifecycle.md](./04-RestoreLifecycle.md)
+- [08-BackupGovernance.md](./08-BackupGovernance.md)

@@ -40,6 +40,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ AI Module Frozen
 - ✔ Todos Module Frozen
 - ✔ Synchronization Module Frozen (v1.0)
+- ✔ Backup Module Frozen
 
 **Next Module:** Notes
 
@@ -97,7 +98,7 @@ It is designed to help both human developers and AI coding agents quickly know:
 | **AI** | Complete | Approved | Yes |
 | **Todos** | Complete | Approved | Yes |
 | **Synchronization** | Complete | Approved | Yes (v1.0) |
-| **Backup** | Pending | Pending | No |
+| **Backup** | Complete | Approved | Yes |
 | **Import / Export** | Pending | Pending | No |
 | **Plugins** | Pending | Pending | No |
 | **Settings** | Pending | Pending | No |
