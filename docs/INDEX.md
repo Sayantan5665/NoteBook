@@ -80,7 +80,11 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Testing strategy, quality assurance, and automation guidelines.
   - **Contents:** Test levels, performance testing, security testing, defect management.
   - **When to reference:** Planning test coverage or reviewing release quality.
-- **`07-development/`**
+- **`07-build-release/`**
+  - **Purpose:** Guidelines for building, packaging, and releasing the application.
+  - **Contents:** Build architecture, packaging strategy, installer logic, version management.
+  - **When to reference:** Preparing a release or debugging packaging pipelines.
+- **`08-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
