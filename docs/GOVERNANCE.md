@@ -189,3 +189,115 @@ The Notebook project values:
 - **Incremental evolution** over large rewrites
 
 The documentation **shall** evolve through controlled, reviewable changes rather than complete regeneration.
+
+---
+
+## 11. Documentation Governance Enhancements
+
+### 11.1 Document Authority Matrix
+
+Each major topic has a single authoritative source. Consulting any other document for the same topic is informational only. When in conflict, the authoritative source takes precedence.
+
+| Topic | Authoritative Source |
+|---|---|
+| **Vision & Product Requirements** | `docs/00-overview/` |
+| **System Architecture** | `docs/01-architecture/` |
+| **Database Design** | `docs/02-database/` |
+| **Module Specifications** | `docs/03-modules/` |
+| **AI & RAG Design** | `docs/04-ai-rag/` |
+| **Development Standards** | `docs/05-development-standards/` |
+| **Testing & Quality** | `docs/06-testing-quality/` |
+| **Build, Packaging & Release** | `docs/07-build-release/` |
+| **Implementation Planning** | `docs/08-implementation-planning/` |
+| **Implementation Guidance** | `docs/09-implementation-playbook/` |
+| **Operations & Maintenance** | `docs/10-operations-maintenance/` |
+| **Architectural Decisions** | `docs/ADR/` |
+| **Governance Rules** | `docs/GOVERNANCE.md` |
+| **Project Status** | `docs/PROJECT_PROGRESS.md` |
+| **Documentation Index** | `docs/INDEX.md` |
+
+Each topic has a single authoritative source to avoid documentation drift.
+
+---
+
+### 11.2 Document Update Matrix
+
+When a significant change occurs, the following documentation areas must be reviewed for consistency. This matrix describes relationships only.
+
+| Change Type | Areas to Review |
+|---|---|
+| **New module added** | `03-modules/`, `02-database/`, `01-architecture/`, `08-implementation-planning/`, `INDEX.md`, `PROJECT_PROGRESS.md` |
+| **Database schema change** | `02-database/`, `03-modules/` (affected), `09-implementation-playbook/06-DatabaseMigrationStrategy.md`, `ADR/` |
+| **AI architecture change** | `04-ai-rag/`, `03-modules/` (AI module), `09-implementation-playbook/07-AIImplementationGuidelines.md`, `ADR/` |
+| **Plugin SDK change** | `03-modules/plugins/`, `09-implementation-playbook/08-PluginImplementationGuidelines.md`, `10-operations-maintenance/07-PluginLifecycleManagement.md`, `ADR/` |
+| **Synchronization change** | `03-modules/sync/`, `09-implementation-playbook/09-SynchronizationImplementationGuidelines.md`, `02-database/`, `ADR/` |
+| **Backup strategy change** | `03-modules/backup/`, `10-operations-maintenance/05-BackupOperations.md`, `07-build-release/07-BackupCompatibility.md`, `ADR/` |
+| **Security policy change** | `05-development-standards/10-SecurityGuidelines.md`, `10-operations-maintenance/09-SecurityMaintenance.md`, `03-modules/plugins/`, `ADR/` |
+| **Release process change** | `07-build-release/`, `10-operations-maintenance/`, `ADR/` |
+
+---
+
+### 11.3 Version Governance
+
+The project distinguishes four independent versioning concepts:
+
+| Version Type | Meaning | Owner |
+|---|---|---|
+| **Documentation Version** | The version of the written specification documents (e.g., `v1.0`). Frozen documents are immutable until an ADR authorizes an update. | Architects |
+| **Architecture Version** | The conceptual design of the system (tracked via ADRs). Architecture versions evolve only through approved ADRs. | Architects |
+| **Application Version** | The version of the released software binary (e.g., `1.0.0`, `2.1.3`). Follows Semantic Versioning. | Release Governance |
+| **Module Version** | The version of an individual module specification. A module may be at `v1.0` while the application is at `v0.8`. | Module Owners |
+
+These lifecycles are independent. An application `v2.0` release does not automatically require a Documentation `v2.0` update unless architectural decisions changed.
+
+---
+
+### 11.4 Requirement Traceability
+
+Every implementation decision should remain traceable to an approved requirement. The conceptual traceability chain is:
+
+```
+Vision
+  ↓
+Requirements (docs/00-overview/)
+  ↓
+Architecture (docs/01-architecture/)
+  ↓
+Module Specifications (docs/03-modules/)
+  ↓
+Implementation (guided by docs/09-implementation-playbook/)
+  ↓
+Testing (docs/06-testing-quality/)
+  ↓
+Release (docs/07-build-release/)
+  ↓
+Operations (docs/10-operations-maintenance/)
+```
+
+If an implementation decision cannot be traced back to an approved requirement or module specification, it should be treated as undocumented behavior and must either be documented via an ADR or removed.
+
+---
+
+### 11.5 Documentation Consistency Checklist
+
+When performing any future documentation update, the following items should be verified before closing the update:
+
+- [ ] **Cross-references validated:** All hyperlinks within updated documents point to correct, existing targets.
+- [ ] **ADRs reviewed:** If the update reflects an architectural decision, a corresponding ADR exists or is being authored.
+- [ ] **Ownership boundaries preserved:** No module now claims responsibilities that belong to another module.
+- [ ] **Terminology consistency verified:** All terms used match the authorized terminology in Section 7 of this document.
+- [ ] **Version information synchronized:** Status metadata (`Status`, `Version`, `Architecture Review`) is consistent across the updated documents.
+- [ ] **INDEX.md updated:** If a new document or directory was added, `docs/INDEX.md` reflects it.
+- [ ] **PROJECT_PROGRESS.md updated:** The project tracker reflects the current completion state.
+
+---
+
+### 11.6 Optional Implementation-Support Phases
+
+Future phases that support the implementation process (such as Tooling & Environment Setup) are classified as **implementation-support phases**. These are distinct from the core architecture documentation (Phases 0–10).
+
+**Classification:**
+- They do not form part of the frozen architectural blueprint.
+- They do not modify any architectural decision, module specification, or governance rule.
+- They exist solely to accelerate practical implementation and may evolve freely as tooling and environments change.
+- They are not subject to the same ADR-controlled freeze process as architectural documents.
