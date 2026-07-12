@@ -84,7 +84,11 @@ The documentation is organized into numbered directories to enforce reading orde
   - **Purpose:** Guidelines for building, packaging, and releasing the application.
   - **Contents:** Build architecture, packaging strategy, installer logic, version management.
   - **When to reference:** Preparing a release or debugging packaging pipelines.
-- **`08-development/`**
+- **`08-implementation-planning/`**
+  - **Purpose:** Strategy and roadmap for building the application.
+  - **Contents:** Implementation strategy, module order, dependency graphs, checklists.
+  - **When to reference:** Deciding what to build next or checking go-live readiness.
+- **`09-development/`**
   - **Purpose:** Engineering standards and local development environment setup.
   - **Contents:** Build scripts, linting rules, PR templates, `DocumentationStyleGuide.md`, `DocumentationNamingConvention.md`.
   - **When to reference:** Setting up a local dev environment or reviewing PRs.
