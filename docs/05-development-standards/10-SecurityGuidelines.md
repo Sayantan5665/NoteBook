@@ -1,7 +1,9 @@
 # 10 — Security Guidelines
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -14,6 +16,7 @@ The Security Guidelines establish the practices required to protect user data fr
 
 ## 2. Core Principles
 
+- **Security Philosophy:** Security is a shared responsibility throughout development. It includes least privilege, privacy-first principles, secure defaults, strict validation, and the unwavering protection of user data.
 - **Least Privilege:** Components, modules, and plugins must only request the minimum permissions necessary to perform their stated function.
 - **Permission Boundaries:** The application must enforce explicit boundaries. A UI component rendering a Note cannot silently trigger a Workspace deletion.
 

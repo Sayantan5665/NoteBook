@@ -1,7 +1,9 @@
 # 13 — Git Workflow
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---

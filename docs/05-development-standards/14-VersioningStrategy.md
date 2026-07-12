@@ -1,7 +1,9 @@
 # 14 — Versioning Strategy
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -33,6 +35,7 @@ The project adheres to Semantic Versioning (`MAJOR.MINOR.PATCH`) concepts.
 ## 3. Backward Compatibility
 
 - **Data Integrity:** A new version of the application must always be capable of cleanly migrating a user's SQLite database from the previous version. Data loss during upgrades is unacceptable.
+- **Compatibility Scope:** Backward compatibility should be explicitly considered for documentation, public interfaces, extension points, and the Plugin SDK to ensure smooth transitions for users and third-party developers.
 
 ---
 

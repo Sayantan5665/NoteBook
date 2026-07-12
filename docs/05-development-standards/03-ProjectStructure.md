@@ -1,7 +1,9 @@
 # 03 — Project Structure
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -34,6 +36,10 @@ The Project Structure document outlines the conceptual organization of directori
 ### 2.6 Documentation
 - **Architecture Documentation:** All high-level documentation remains in `docs/`. 
 - **Code-Level Documentation:** Specific implementation readmes can reside inside the specific module folders.
+
+### 2.7 Code Ownership Philosophy
+- Each module should have clearly defined ownership.
+- Explicit ownership improves consistency and reduces conflicting changes across bounded contexts.
 
 ---
 

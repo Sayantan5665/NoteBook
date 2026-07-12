@@ -1,7 +1,9 @@
 # 11 — Documentation Standards
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -14,6 +16,7 @@ The Documentation Standards ensure that all architectural and technical document
 
 ## 2. Expectations
 
+- **Documentation Lifecycle:** Documentation evolves together with the project and is considered part of the final deliverable. It should remain synchronized with architecture and implementation at all times.
 - **Documentation is Code:** Documentation updates are required as part of the pull request process for any architectural or significant functional changes.
 - **Canonical Source:** The `docs/` folder is the single source of truth for the system's design.
 

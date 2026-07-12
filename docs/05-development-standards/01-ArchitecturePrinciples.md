@@ -1,7 +1,9 @@
 # 01 — Architecture Principles
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -40,6 +42,11 @@ This document outlines the non-negotiable architectural principles that every im
 
 ### 2.7 Stable Ownership Boundaries
 - A module completely owns its domain. For example, the Synchronization module orchestrates sync, but it never owns or defines what a "Note" is.
+
+### 2.8 Architecture Decision Philosophy
+- Architectural changes follow a formal Architecture Decision Record (ADR) process.
+- Implementation must strictly follow the approved architecture.
+- Architecture is never silently changed during implementation.
 
 ---
 

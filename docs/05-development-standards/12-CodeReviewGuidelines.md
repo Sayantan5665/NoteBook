@@ -1,7 +1,9 @@
 # 12 — Code Review Guidelines
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -41,20 +43,41 @@ Reviewers must evaluate Pull Requests (PRs) against the following conceptual cri
 
 ---
 
-## 3. Business Rules
+## 3. Definition of Done
+
+A task or feature is conceptually considered "Done" when it passes all quality gates:
+- Architecture compliance verified
+- Documentation updated and reviewed
+- Automated tests updated and passing
+- Security review completed
+- Performance review completed
+- Code review completed and approved
+
+## 4. Quality Gates
+
+Reviewers act as the conceptual quality gates for the project. These gates include:
+- **Build validation:** Ensuring the application compiles without errors.
+- **Test validation:** Ensuring all automated tests pass.
+- **Documentation review:** Ensuring specifications match implementation.
+- **Architecture compliance:** Ensuring module boundaries are respected.
+- **Security review:** Ensuring data protection and validation standards are met.
+
+---
+
+## 5. Business Rules
 
 - **No Self-Approval:** Authors cannot approve their own PRs.
 - **Constructive Feedback:** Reviews must be professional, constructive, and point to specific architectural or coding standards when requesting changes.
 
 ---
 
-## 4. Acceptance Criteria
+## 6. Acceptance Criteria
 
 - A PR cannot be merged until it passes CI checks and receives approval confirming it meets this checklist.
 
 ---
 
-## 5. Cross References
+## 7. Cross References
 
 - [01-ArchitecturePrinciples.md](./01-ArchitecturePrinciples.md)
 - [10-SecurityGuidelines.md](./10-SecurityGuidelines.md)

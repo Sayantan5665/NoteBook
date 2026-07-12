@@ -1,7 +1,9 @@
 # 02 — Coding Standards
 
 > **Module:** Development Standards
-> **Status:** Draft
+> **Status:** Frozen
+> **Version:** 1.0
+> **Architecture Review:** Approved
 > **Applies To:** Notebook Application
 
 ---
@@ -36,6 +38,14 @@ Where appropriate in Object-Oriented paradigms:
 
 ### 2.5 Immutability
 - **Immutability where practical:** Use immutable data structures for configuration, state snapshots, and DTOs to prevent unintended side effects and make concurrent operations safer.
+
+### 2.6 Refactoring Philosophy
+- Refactoring improves internal quality while preserving externally observable behavior.
+- Refactoring should not silently redesign approved architecture.
+
+### 2.7 Technical Debt Philosophy
+- Technical debt should be documented, prioritized, and intentionally managed.
+- Hidden technical debt should be avoided.
 
 ---
 
