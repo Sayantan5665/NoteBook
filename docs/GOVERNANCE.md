@@ -129,6 +129,7 @@ AI coding agents generating or updating documentation **shall**:
 4. **Preserve architectural consistency** across all files.
 5. **Follow approved ADRs.** Ensure edits do not violate recorded decisions.
 6. **Generate incremental updates** whenever possible rather than creating entirely new parallel documents.
+7. Before closing any implementation task, review all affected documentation and synchronize it with the implementation. An implementation is not complete until documentation has been updated and `PROJECT_PROGRESS.md` and `CHANGELOG.md` have been synchronized.
 
 ---
 
@@ -295,6 +296,77 @@ When performing any future documentation update, the following items should be v
 ### 11.6 Optional Implementation-Support Phases
 
 Future phases that support the implementation process (such as Tooling & Environment Setup) are classified as **implementation-support phases**. These are distinct from the core architecture documentation (Phases 0–10).
+
+---
+
+## 11.7 Implementation Completion & Documentation Synchronization
+
+Implementation is not considered complete until the implementation, documentation, and project tracking have been synchronized.
+
+### Definition of Done
+
+Every implementation task shall finish with the following activities before it is considered complete:
+
+1. Review all documentation affected by the implementation.
+2. Update every affected document using targeted patches.
+3. Update `PROJECT_PROGRESS.md`.
+4. Update `CHANGELOG.md`.
+5. Verify that repository structure documentation reflects the current implementation.
+6. Verify that documentation remains consistent with the implementation.
+7. Remove or update obsolete documentation created by implementation changes.
+8. Verify that no approved document contradicts the current implementation.
+
+Implementation shall not be considered complete if any affected documentation remains outdated.
+
+---
+
+### Mandatory Documentation Review
+
+Every implementation shall review, at minimum, the following documents where applicable:
+
+- `PROJECT_PROGRESS.md`
+- `CHANGELOG.md`
+- `INDEX.md`
+- Architecture documents
+- Module specifications
+- Database documentation
+- AI documentation
+- Plugin documentation
+- Development standards
+- Build documentation
+- Testing documentation
+- Operations documentation
+- README.md (if applicable)
+
+Only documents affected by the implementation shall be modified.
+
+---
+
+### Implementation Report
+
+Every completed implementation shall provide a final implementation report containing:
+
+- Summary of work completed
+- Files created
+- Files modified
+- Packages installed
+- Dependencies updated
+- Documentation updated
+- Validation performed
+- Remaining work
+- Known limitations
+
+This report becomes part of the implementation history and shall be used to update `PROJECT_PROGRESS.md` and `CHANGELOG.md`.
+
+---
+
+### Documentation Synchronization Rule
+
+Code shall never become the only source of truth.
+
+If implementation introduces new behavior, configuration, packages, workflows, folders, IPC channels, APIs, database objects, or build processes, the corresponding documentation shall be updated before the implementation is considered complete.
+
+Documentation synchronization is a mandatory completion criterion rather than an optional follow-up task.
 
 **Classification:**
 - They do not form part of the frozen architectural blueprint.
