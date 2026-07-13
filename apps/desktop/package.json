@@ -1,14 +1,35 @@
 {
-    "main": "src/index.ts",
     "name": "@notebook/desktop",
     "version": "1.0.0",
+    "main": "dist/electron/main.js",
     "scripts": {
-        "build": "tsc -b"
+        "ng": "ng",
+        "dev": "pnpm run build:packages && pnpm run build:electron && concurrently \"ng serve\" \"wait-on http://localhost:4200 && cross-env NODE_ENV=development electron .\"",
+        "start": "cross-env NODE_ENV=production electron .",
+        "build": "pnpm run build:packages && pnpm run build:angular && pnpm run build:electron",
+        "build:angular": "ng build",
+        "build:electron": "tsc -p tsconfig.electron.json",
+        "build:packages": "tsc -b ../../packages/shared-types/tsconfig.json ../../packages/ipc-contracts/tsconfig.json",
+        "lint": "ng lint",
+        "clean": "rimraf dist"
     },
     "dependencies": {
-        "electron": "^43.1.0"
+        "@notebook/ipc-contracts": "workspace:*",
+        "@notebook/shared-types": "workspace:*",
+        "@angular/common": "^22.0.0",
+        "@angular/compiler": "^22.0.0",
+        "@angular/core": "^22.0.0",
+        "@angular/platform-browser": "^22.0.0",
+        "@angular/platform-browser-dynamic": "^22.0.0",
+        "@angular/router": "^22.0.0",
+        "electron": "^43.1.0",
+        "rxjs": "^7.8.0",
+        "zone.js": "~0.15.0"
     },
     "devDependencies": {
+        "@angular/build": "^22.0.0",
+        "@angular/cli": "^22.0.0",
+        "@angular/compiler-cli": "^22.0.0",
         "concurrently": "^10.0.3",
         "cross-env": "^10.1.0",
         "electron-builder": "^26.15.3",

@@ -157,6 +157,13 @@ $RECYCLE.BIN/
 .nx/
 .turbo/
 
+# Angular CLI cache (build cache, esbuild cache)
+.angular/
+
+# Electron / electron-builder output
+release-builds/
+electron-dist/
+
 # Project Specific Output
 dist/
 build/

@@ -24,10 +24,10 @@ It is designed to help both human developers and AI coding agents quickly know:
 ## 2. Project Overview
 
 - **Project Name:** Notebook
-- **Current Phase:** Documentation Complete
-- **Current Milestone:** Architectural Blueprint Frozen (v1.0)
-- **Overall Status:** Architectural Documentation Complete
-- **Last Updated:** 2026-07-12
+- **Current Phase:** Implementation — Foundation
+- **Current Milestone:** M0 Architecture Complete ✔ → Working toward M1 Core Features
+- **Overall Status:** Implementation In Progress
+- **Last Updated:** 2026-07-14
 - **GOVERNANCE.md:** Updated with Document Authority Matrix, Update Matrix, Version Governance, Requirement Traceability, Consistency Checklist, and Implementation-Support Phase Classification.
 
 **Current State Snapshot:**
@@ -42,17 +42,19 @@ It is designed to help both human developers and AI coding agents quickly know:
 - ✔ Phase 8 — Implementation Planning Frozen (v1.0)
 - ✔ Phase 9 — Implementation Playbook Frozen (v1.0)
 - ✔ Phase 10 — Operations, Maintenance & Evolution Frozen (v1.0)
+- 🚧 **Implementation Phase — Foundation (In Progress)**
+  - ✔ Desktop Application Shell complete (Angular 22 + Electron 43 + IPC bridge)
 
-**Next Phase:** None (Documentation Complete)
+**Next Implementation Step:** Foundation — monorepo package setup, SQLite/Prisma infrastructure, domain layer scaffolding.
 
 ---
 
 ## 3. Current Milestone
 
-- **Current Goal:** Maintain the architectural blueprint through the lifecycle of the project.
-- **Next Goal:** N/A (Documentation phase has concluded).
-- **Upcoming Review:** N/A
-- **Expected Deliverables:** None (All documentation deliverables are complete).
+- **Current Goal:** Complete the Foundation implementation phase — all workspace/infrastructure plumbing before any feature module begins.
+- **Next Goal:** M1 Core Features — Workspace, Notes, Editor modules.
+- **Upcoming Review:** Foundation phase sign-off before Core Workspace begins.
+- **Expected Deliverables:** SQLite schema, Prisma client, domain entities, repository interfaces, DI wiring, logging infrastructure.
 
 ---
 
@@ -234,6 +236,28 @@ The following documents have been approved and frozen. Frozen documents should o
 - **Future ADRs:** None pending.
 - **Deferred Features:** Custom ordering for Folders, Folder duplicate/merge, Archiving states.
 
+### Implementation Progress
+
+| Implementation Phase | Status | Completed |
+|---|---|---|
+| Desktop Application Shell | ✔ Complete | 2026-07-14 |
+| Foundation (SQLite, Prisma, Domain) | ⏳ Not Started | — |
+| Core Workspace | ⏳ Not Started | — |
+| Notes | ⏳ Not Started | — |
+| Editor | ⏳ Not Started | — |
+| Attachments | ⏳ Not Started | — |
+| OCR | ⏳ Not Started | — |
+| Search | ⏳ Not Started | — |
+| Embeddings | ⏳ Not Started | — |
+| AI | ⏳ Not Started | — |
+| Plugins | ⏳ Not Started | — |
+| Synchronization | ⏳ Not Started | — |
+| Import / Export | ⏳ Not Started | — |
+| Backup | ⏳ Not Started | — |
+| Notifications | ⏳ Not Started | — |
+| Settings | ⏳ Not Started | — |
+| Polish | ⏳ Not Started | — |
+
 ---
 
 ## 7. Implementation Readiness
@@ -260,12 +284,13 @@ Implementation must not begin until the required documentation has been reviewed
 ## 8. Project Metrics
 
 - **Total Documentation Phases:** 11 (Phases 0-10)
-- **Completed Phases:** 11 (Phases 0-10)
-- **Current Phase:** None (Documentation Complete)
+- **Completed Documentation Phases:** 11 (Phases 0-10)
+- **Current Phase:** Implementation — Foundation
 - **Frozen Documents:** All (v1.0)
 - **Pending Reviews:** 0
-- **Remaining Modules:** 0
 - **Open ADRs:** 0
+- **Implementation Phases Complete:** 1 of 17 (Desktop Application Shell)
+- **Implementation Phases Remaining:** 16
 
 ---
 

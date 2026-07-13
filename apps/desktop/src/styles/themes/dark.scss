@@ -1,0 +1,17 @@
+/**
+ * Dark theme CSS custom property overrides.
+ *
+ * The default (dark) theme values are defined in src/styles.scss :root block.
+ * This file holds explicit dark overrides for when ThemeService (future phase)
+ * sets [data-theme='dark'] on <html> to override a light OS preference.
+ *
+ * Reference: docs/01-architecture/05-Angular.md §9
+ */
+[data-theme='dark'] {
+  --color-bg: #0f0f1a;
+  --color-surface: #1a1a2e;
+  --color-surface-raised: #212135;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-border: #2d3748;
+}

@@ -1,0 +1,16 @@
+/**
+ * Light theme CSS custom property overrides.
+ *
+ * Applied by ThemeService (future phase) via [data-theme='light'] on <html>.
+ * The base values (dark theme) are defined in src/styles.scss :root block.
+ *
+ * Reference: docs/01-architecture/05-Angular.md §9
+ */
+[data-theme='light'] {
+  --color-bg: #f0f4f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f8fafc;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+}

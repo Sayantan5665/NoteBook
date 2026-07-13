@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "outDir": "dist/electron",
+    "rootDir": "electron",
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@notebook/ipc-contracts": ["../../packages/ipc-contracts/dist"],
+      "@notebook/ipc-contracts/*": ["../../packages/ipc-contracts/dist/*"],
+      "@notebook/shared-types": ["../../packages/shared-types/dist"],
+      "@notebook/shared-types/*": ["../../packages/shared-types/dist/*"]
+    }
+  },
+  "include": ["electron/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src"]
+}

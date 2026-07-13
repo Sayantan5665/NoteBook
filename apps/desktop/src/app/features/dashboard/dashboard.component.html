@@ -1,0 +1,32 @@
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p class="subtitle">Welcome to Notebook</p>
+</div>
+
+<div class="ipc-status-bar" [class.connected]="ipcStatus().startsWith('IPC connected')">
+  <span class="status-dot" aria-hidden="true"></span>
+  <span>{{ ipcStatus() }}</span>
+</div>
+
+<div class="feature-cards">
+  <div class="card">
+    <div class="card-icon" aria-hidden="true">📝</div>
+    <h3>Notes</h3>
+    <p>Create and manage your notes</p>
+  </div>
+  <div class="card">
+    <div class="card-icon" aria-hidden="true">🔍</div>
+    <h3>Search</h3>
+    <p>Find anything instantly with full-text and semantic search</p>
+  </div>
+  <div class="card">
+    <div class="card-icon" aria-hidden="true">🤖</div>
+    <h3>AI Assistant</h3>
+    <p>Chat with your local knowledge base using Ollama</p>
+  </div>
+  <div class="card">
+    <div class="card-icon" aria-hidden="true">🔗</div>
+    <h3>Wiki Links</h3>
+    <p>Bidirectional linking between notes</p>
+  </div>
+</div>

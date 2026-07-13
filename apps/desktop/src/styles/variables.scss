@@ -1,0 +1,16 @@
+/**
+ * Design token variables as SCSS variables.
+ *
+ * These mirror the CSS custom properties in styles.scss.
+ * Use these in component SCSS files for build-time access
+ * (e.g., media query breakpoints that cannot use CSS vars).
+ */
+
+// Breakpoints (CSS vars cannot be used in @media queries)
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+
+// Sidebar
+$sidebar-width: 220px;
